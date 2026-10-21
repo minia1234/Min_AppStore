@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "minappstore-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-21",
+  "workers_dev": true,
+  "rules": [{"type":"Text","globs":["**/*.html"],"fallthrough":true}],
+  "durable_objects": {"bindings":[{"name":"STATE","class_name":"MinAppStoreState"}]},
+  "migrations": [{"tag":"v1","new_sqlite_classes":["MinAppStoreState"]}],
+  "vars": {"GITHUB_REPOSITORY":"minia1234/Min_AppStore","GITHUB_REF":"main"}
+}

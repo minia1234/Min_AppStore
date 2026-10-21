@@ -1,0 +1,10 @@
+{
+  "name": "MinAppStore",
+  "summary": "개인 개발자의 Android 앱을 찾아보고 업데이트하는 스토어",
+  "description": "GitHub 공개 릴리스에서 앱을 찾아보고 검증된 APK를 내려받습니다. 설치와 업데이트는 Android 시스템의 사용자 확인을 거칩니다.",
+  "category": "도구",
+  "author": "minia1234",
+  "tags": ["앱 스토어", "개인 개발"],
+  "iconUrl": "",
+  "screenshots": []
+}

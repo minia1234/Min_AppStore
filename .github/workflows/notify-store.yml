@@ -1,0 +1,25 @@
+name: Notify central MinAppStore after publication
+on:
+  release:
+    types: [published]
+permissions:
+  contents: read
+jobs:
+  notify:
+    # The central repository handles its own release event in sync-store.yml.
+    if: vars.GITHUB_STORE_REPOSITORY != '' && vars.GITHUB_STORE_REPOSITORY != github.repository && !github.event.release.prerelease
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GITHUB_STORE_REPOSITORY: ${{ vars.GITHUB_STORE_REPOSITORY }}
+      GITHUB_STORE_REF: ${{ vars.GITHUB_STORE_REF || 'main' }}
+      GH_TOKEN: ${{ secrets.GITHUB_STORE_DISPATCH_TOKEN }}
+    steps:
+      - name: Request a central store synchronization
+        run: |
+          python - <<'PY'
+          import os,re
+          assert re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+',os.environ['GITHUB_STORE_REPOSITORY']), 'Configure the central owner/repo'
+          assert os.environ['GH_TOKEN'], 'Missing central Actions write dispatch token'
+          PY
+          gh api --method POST "repos/$GITHUB_STORE_REPOSITORY/actions/workflows/sync-store.yml/dispatches" -f "ref=$GITHUB_STORE_REF"

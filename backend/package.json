@@ -1,0 +1,1 @@
+{"name":"indi-store-api","private":true,"type":"module","scripts":{"test":"tsx --test test/*.test.ts","typecheck":"tsc --noEmit","dry-run":"wrangler deploy --dry-run"},"devDependencies":{"@cloudflare/workers-types":"latest","tsx":"^4.20.0","typescript":"^5.9.0","wrangler":"^4.0.0"}}

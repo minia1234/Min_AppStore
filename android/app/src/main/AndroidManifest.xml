@@ -1,0 +1,21 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- An app store must compare catalog entries with all installed packages. -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" tools:ignore="QueryAllPackagesPermission" />
+    <application android:name=".StoreApplication" android:allowBackup="false"
+        android:label="MinAppStore" android:theme="@style/Theme.IndiStore"
+        android:icon="@drawable/ic_store" android:usesCleartextTraffic="false"
+        android:supportsRtl="true">
+        <activity android:name=".MainActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".InstallResultActivity" android:exported="false"
+            android:excludeFromRecents="true" android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+    </application>
+</manifest>

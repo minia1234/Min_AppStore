@@ -1,0 +1,16 @@
+node_modules/
+.wrangler/
+.gradle/
+**/build/
+android/local.properties
+.env
+.dev.vars
+*.jks
+*.keystore
+*.pem
+__pycache__/
+.pytest_cache/
+.venv/
+dist/
+artifacts/
+integration/ApplicationTest/

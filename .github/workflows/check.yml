@@ -1,0 +1,43 @@
+name: Check MinAppStore
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - name: Check Worker
+        working-directory: backend
+        run: |
+          npm ci
+          npm test
+          npm run typecheck
+          npm run dry-run
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check synchronization rules
+        run: PYTHONPATH=scripts python -m unittest discover -s scripts/tests -v
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Check Android
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew testDebugUnitTest lintDebug assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MinAppStore-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk

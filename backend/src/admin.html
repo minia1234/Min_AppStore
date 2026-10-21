@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>저장소 관리 · MinAppStore</title>
+  <style>
+    :root { color-scheme: light; --green:#205c46; --deep:#163d30; --cream:#f7f8f2; --line:#e1e7dc; --muted:#647064; --mint:#e8f0e4; }
+    * { box-sizing:border-box; }
+    [hidden] { display:none !important; }
+    body { margin:0; background:var(--cream); color:#24352b; font:15px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    button,input,select { font:inherit; }
+    button,a,input,select { -webkit-tap-highlight-color:transparent; }
+    button { cursor:pointer; }
+    button:disabled { cursor:wait; opacity:.55; }
+    :focus-visible { outline:3px solid #8bac72; outline-offset:4px; }
+    a { color:var(--green); text-underline-offset:4px; }
+    header { background:#fff; border-bottom:1px solid var(--line); }
+    .header-inner { max-width:1180px; margin:auto; min-height:88px; padding:18px 32px; display:flex; align-items:center; justify-content:space-between; gap:20px; }
+    .brand { display:flex; align-items:center; gap:12px; font-weight:760; font-size:21px; letter-spacing:-.6px; }
+    .mark { display:grid; place-items:center; width:42px; height:42px; border-radius:14px; color:#fff; background:var(--green); font-size:25px; font-family:Georgia,serif; }
+    .brand small { font-size:12px; font-weight:500; color:var(--muted); letter-spacing:0; display:block; line-height:1.2; }
+    main { max-width:1180px; margin:auto; padding:44px 32px 64px; }
+    h1,h2,p { margin:0; }
+    h1 { font-size:clamp(27px,4vw,38px); line-height:1.3; font-weight:760; letter-spacing:-1.4px; }
+    h2 { font-size:19px; letter-spacing:-.5px; }
+    .eyebrow { font-size:11px; font-weight:750; letter-spacing:2px; color:#a8c29a; margin-bottom:15px; }
+    .muted { color:var(--muted); }
+    .small { font-size:13px; }
+    .primary,.secondary,.quiet,.repo-button { display:inline-flex; justify-content:center; align-items:center; min-height:42px; padding:9px 18px; border-radius:12px; font-weight:650; border:1px solid transparent; gap:7px; }
+    .primary { background:var(--green); color:#fff; }
+    .primary:hover:not(:disabled) { background:var(--deep); }
+    .secondary { background:#fff; color:var(--green); border-color:var(--line); }
+    .secondary:hover:not(:disabled),.repo-button:hover:not(:disabled) { background:var(--mint); }
+    .quiet { background:none; color:var(--muted); padding:8px; }
+    .login { max-width:960px; margin:28px auto 0; display:grid; grid-template-columns:1.05fr 1fr; border:1px solid var(--line); border-radius:28px; overflow:hidden; background:#fff; }
+    .welcome { background:var(--green); color:white; padding:48px 38px; display:flex; flex-direction:column; justify-content:space-between; gap:64px; }
+    .welcome p { margin-top:20px; color:#dae6d6; }
+    .welcome .footnote { border-top:1px solid #50765f; padding-top:24px; font-size:13px; }
+    .login-form { padding:48px 38px; align-self:center; }
+    .login-form h2 { margin-bottom:10px; }
+    label { display:block; font-size:13px; font-weight:650; margin-bottom:7px; }
+    input,select { width:100%; min-height:46px; border:1px solid #cdd7c7; border-radius:12px; color:inherit; background:#fff; padding:10px 13px; }
+    input::placeholder { color:#8a948a; }
+    #login-form label { margin-top:28px; }
+    #login-form .primary { width:100%; margin-top:22px; }
+    .security-note { margin-top:18px; color:var(--muted); font-size:12px; }
+    .error { background:#fff0ec; color:#8e3527; border:1px solid #f0d2c8; }
+    .notice { border-radius:14px; padding:14px 18px; margin-bottom:22px; }
+    .notice.success { background:#e7f1e6; color:#275437; border:1px solid #c9dfc6; }
+    .notice.warning { background:#fff4d9; color:#76591e; border:1px solid #ead8a9; }
+    #login-error { margin:18px 0 0; }
+    .intro { display:flex; justify-content:space-between; align-items:flex-end; gap:24px; margin-bottom:30px; }
+    .intro p { margin-top:12px; color:var(--muted); }
+    .intro .eyebrow { color:var(--green); }
+    .stats { display:grid; grid-template-columns:repeat(3,1fr); border:1px solid var(--line); border-radius:20px; background:#fff; margin-bottom:32px; }
+    .stat { padding:22px 28px; }
+    .stat + .stat { border-left:1px solid var(--line); }
+    .stat strong { font-size:30px; line-height:1.2; display:block; letter-spacing:-1px; margin-top:8px; }
+    .stat span { color:var(--muted); font-size:13px; }
+    .toolbar { display:grid; grid-template-columns:1fr 180px 150px; gap:14px; align-items:end; margin-bottom:22px; }
+    .list-heading { display:flex; gap:12px; justify-content:space-between; align-items:center; padding:0 2px 15px; }
+    .repo-list { border:1px solid var(--line); border-radius:20px; background:#fff; overflow:hidden; }
+    .repo-row { display:grid; grid-template-columns:minmax(0,1fr) 140px 116px; gap:24px; align-items:center; padding:24px 26px; }
+    .repo-row + .repo-row { border-top:1px solid var(--line); }
+    .repo-title { display:flex; flex-wrap:wrap; align-items:center; gap:9px; }
+    .repo-title a { font-size:17px; font-weight:720; text-decoration:none; overflow-wrap:anywhere; }
+    .repo-title a:hover { text-decoration:underline; }
+    .repo-description { color:var(--muted); margin:7px 0 8px; overflow-wrap:anywhere; }
+    .repo-meta { font-size:12px; color:#7a8479; overflow-wrap:anywhere; }
+    .badge { font-size:11px; border-radius:6px; padding:2px 7px; background:#eff0eb; color:#6a7166; white-space:nowrap; }
+    .link-status { display:inline-flex; gap:7px; align-items:center; font-size:13px; font-weight:650; color:var(--muted); }
+    .dot { width:7px; height:7px; border-radius:50%; background:#b4bcb0; }
+    .linked { color:var(--green); }
+    .linked .dot { background:#438355; }
+    .repo-button { background:#fff; border-color:#cbd9c5; color:var(--green); width:100%; font-size:13px; padding:8px; }
+    .repo-actions { display:grid; gap:8px; }
+    .visibility-option { display:flex; align-items:center; gap:8px; margin:0 0 16px; color:var(--muted); }
+    .visibility-option input { width:18px; min-height:18px; margin:0; }
+    .repo-button[data-linked="true"] { color:var(--muted); border-color:var(--line); }
+    .empty { padding:70px 24px; text-align:center; }
+    .empty strong { display:block; font-size:18px; margin-bottom:8px; }
+    .guide { display:grid; grid-template-columns:1fr 1fr; gap:26px; border-top:1px solid var(--line); margin-top:36px; padding-top:26px; }
+    .guide h2 { font-size:14px; margin-bottom:7px; }
+    .guide p { color:var(--muted); font-size:13px; }
+    footer { max-width:1180px; margin:auto; padding:0 32px 28px; color:#879080; font-size:12px; }
+    @media(max-width:760px) {
+      .header-inner { min-height:76px; padding:16px 20px; } main { padding:28px 20px 40px; } footer { padding:0 20px 24px; }
+      .login { margin-top:0; grid-template-columns:1fr; border-radius:22px; } .welcome { padding:30px 26px; gap:25px; }
+      .welcome .footnote { display:none; } .login-form { padding:30px 26px; } .welcome p { margin-top:12px; }
+      .intro { align-items:flex-start; flex-direction:column; gap:18px; } .intro .secondary { align-self:flex-end; }
+      .stats { margin-bottom:24px; } .stat { padding:18px 14px; } .stat strong { font-size:25px; }
+      .toolbar { grid-template-columns:1fr 1fr; gap:12px; } .search-field { grid-column:1/-1; }
+      .repo-row { grid-template-columns:minmax(0,1fr) auto; gap:14px; padding:21px 20px; }
+      .repo-info { grid-column:1/-1; } .repo-button { min-width:108px; } .guide { grid-template-columns:1fr; gap:20px; }
+      .list-heading { align-items:flex-start; flex-direction:column; gap:4px; }
+    }
+    @media(prefers-reduced-motion:no-preference) { button { transition:background .15s,opacity .15s; } }
+  </style>
+</head>
+<body>
+  <header><div class="header-inner">
+    <div class="brand"><span class="mark" aria-hidden="true">m</span><div>MinAppStore<small>개발자의 작은 아이디어를 한곳에</small></div></div>
+    <button id="logout" class="quiet" type="button" hidden>로그아웃</button>
+  </div></header>
+  <main>
+    <section id="login" class="login" aria-labelledby="login-title">
+      <div class="welcome"><div><div class="eyebrow">YOUR APPS, YOUR COLLECTION</div><h1 id="login-title">좋은 아이디어가<br>앱이 되는 곳.</h1><p>공개 GitHub 저장소를 선택해<br>나만의 스토어와 연결하세요.</p></div><p class="footnote">minia1234 · AIProject-k<br>서버에서 허용한 두 계정의 공개 저장소만 관리합니다.</p></div>
+      <form id="login-form" class="login-form">
+        <h2>스토어 관리에 로그인</h2><p class="muted small">Worker에 설정한 관리자 토큰을 입력하세요.</p>
+        <label for="token">관리자 토큰</label><input id="token" name="admin-token" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="관리자 토큰 입력" required>
+        <button id="login-button" class="primary" type="submit">저장소 관리 시작하기 <span aria-hidden="true">→</span></button>
+        <p class="security-note">토큰은 이 페이지의 메모리에만 보관합니다. 새로고침하거나 로그아웃하면 다시 입력해야 합니다. Android 앱에는 저장하지 않습니다.</p>
+        <p id="login-error" class="notice error" role="alert" hidden></p>
+      </form>
+    </section>
+    <section id="dashboard" aria-labelledby="page-title" hidden>
+      <div class="intro"><div><div class="eyebrow">STORE MANAGEMENT</div><h1 id="page-title" tabindex="-1">앱이 시작되는 저장소</h1><p>스토어에 연결할 공개 저장소를 직접 선택하세요.</p></div><a class="secondary" href="https://github.com/minia1234/Min_AppStore/actions/workflows/sync-store.yml" target="_blank" rel="noopener noreferrer">동기화 실행</a><button id="refresh" class="secondary" type="button"><span aria-hidden="true">↻</span> 목록 새로고침</button></div>
+      <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+      <div class="stats" aria-label="서버에서 조회한 저장소 현황">
+        <div class="stat"><span>전체 공개 저장소</span><strong id="total-count">—</strong></div>
+        <div class="stat"><span>스토어 연동</span><strong id="linked-count">—</strong></div>
+        <div class="stat"><span>미연동</span><strong id="unlinked-count">—</strong></div>
+      </div>
+      <div class="toolbar">
+        <div class="search-field"><label for="search">저장소 검색</label><input id="search" type="search" placeholder="이름이나 설명으로 찾아보세요" autocomplete="off"></div>
+        <div><label for="owner">GitHub 계정</label><select id="owner"><option value="">전체 계정</option></select></div>
+        <div><label for="link-filter">연동 상태</label><select id="link-filter"><option value="">전체 상태</option><option value="linked">연동됨</option><option value="unlinked">미연동</option></select></div>
+      </div>
+      <label class="visibility-option"><input id="show-disabled" type="checkbox">비활성 항목 보기 · 다시 활성화할 수 있습니다</label>
+      <div class="list-heading"><h2>공개 저장소 <span id="result-count" class="muted small"></span></h2><p id="updated-at" class="muted small"></p></div>
+      <div id="repo-list" class="repo-list" aria-live="polite" aria-busy="false"></div>
+      <div class="guide"><div><h2>연동하면 어떻게 되나요?</h2><p>실제 APK와 릴리스 정보를 검증한 앱만 스토어에 표시됩니다. 연결만으로 즉시 등록되지는 않습니다.</p></div><div><h2>비활성화는 숨기기입니다</h2><p>연동 선택을 유지하며 이 기본 목록과 스토어 앱 목록에서 숨깁니다. 비활성 항목 보기에서 복원할 수 있습니다. 연동 해제와 비활성화 모두 GitHub 원본을 삭제하지 않습니다.</p></div></div>
+    </section>
+  </main>
+  <footer>MinAppStore · PRIVATE MANAGEMENT</footer>
+  <script>
+    "use strict";
+    const byId = id => document.getElementById(id);
+    let token = "";
+    let repositories = [];
+    let owners = [];
+    let busy = false;
+    let request = null;
+    const endpoint = "/api/admin/repositories";
+
+    function notice(message, kind = "success") {
+      const authenticated = !byId("dashboard").hidden;
+      const element = byId(authenticated ? "notice" : "login-error");
+      element.textContent = message;
+      element.className = "notice " + (authenticated ? kind : "error");
+      element.hidden = !message;
+    }
+    function setBusy(value) {
+      busy = value;
+      byId("login-button").disabled = value;
+      byId("login-button").textContent = value ? "목록을 확인하고 있어요…" : "저장소 관리 시작하기 →";
+      byId("refresh").disabled = value;
+      byId("repo-list").setAttribute("aria-busy", String(value));
+      byId("repo-list").querySelectorAll("button").forEach(button => { button.disabled = value || button.dataset.disabled === "true"; });
+    }
+    function logout() {
+      request?.abort();
+      token = "";
+      repositories = [];
+      owners = [];
+      byId("token").value = "";
+      byId("search").value = "";
+      byId("link-filter").value = "";
+      byId("show-disabled").checked = false;
+      byId("owner").replaceChildren(new Option("전체 계정", ""));
+      byId("repo-list").replaceChildren();
+      byId("updated-at").textContent = "";
+      ["total-count", "linked-count", "unlinked-count", "result-count"].forEach(id => { byId(id).textContent = ""; });
+      byId("notice").hidden = true;
+      byId("notice").textContent = "";
+      byId("login-error").hidden = true;
+      byId("login-error").textContent = "";
+      byId("dashboard").hidden = true;
+      byId("logout").hidden = true;
+      byId("login").hidden = false;
+      setBusy(false);
+      byId("token").focus();
+    }
+    async function api(method, payload) {
+      request = new AbortController();
+      const response = await fetch(endpoint, {
+        method, credentials: "omit", cache: "no-store", signal: request.signal,
+        headers: { Authorization: "Bearer " + token, ...(payload ? { "Content-Type": "application/json" } : {}) },
+        ...(payload ? { body: JSON.stringify(payload) } : {})
+      });
+      if (response.status === 401) { logout(); throw new Error("관리자 토큰이 올바르지 않거나 만료되었습니다. 다시 로그인하세요."); }
+      if (response.status === 409) throw new Error("서버에서 다른 변경을 처리 중입니다. 잠시 후 다시 시도하세요. 현재 목록은 유지됩니다.");
+      const result = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(result?.message || result?.error || "서버에서 요청을 처리하지 못했습니다. 잠시 후 다시 시도하세요.");
+      if (!result) throw new Error("서버 응답을 읽을 수 없습니다. 연결 주소와 서버 상태를 확인하세요.");
+      return result;
+    }
+    function element(tag, className, text) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    }
+    function render() {
+      const linkedCount = repositories.filter(repo => repo.linked).length;
+      byId("total-count").textContent = repositories.length;
+      byId("linked-count").textContent = linkedCount;
+      byId("unlinked-count").textContent = repositories.length - linkedCount;
+      const query = byId("search").value.trim().toLocaleLowerCase();
+      const owner = byId("owner").value;
+      const filter = byId("link-filter").value;
+      const filtered = repositories.filter(repo => (byId("show-disabled").checked || !repo.disabled) && (!owner || repo.owner === owner) &&
+        (!filter || repo.linked === (filter === "linked")) &&
+        [repo.name, repo.fullName, repo.description || ""].some(value => value.toLocaleLowerCase().includes(query)));
+      byId("result-count").textContent = filtered.length + "개";
+      const list = byId("repo-list");
+      list.replaceChildren();
+      if (!filtered.length) {
+        const empty = element("div", "empty");
+        empty.append(element("strong", "", repositories.length ? "검색 결과가 없어요" : "조회된 공개 저장소가 없어요"),
+          element("p", "muted small", repositories.length ? "검색어나 필터를 변경해 보세요." : "계정의 공개 저장소와 서버 연결 상태를 확인하세요."));
+        list.append(empty);
+      }
+      filtered.forEach(repo => {
+        const row = element("article", "repo-row");
+        const info = element("div", "repo-info");
+        const title = element("div", "repo-title");
+        const link = element("a", "", repo.name);
+        link.href = "https://github.com/" + repo.fullName.split("/").map(encodeURIComponent).join("/");
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.setAttribute("aria-label", repo.fullName + " GitHub에서 보기, 새 창");
+        title.append(link);
+        if (repo.archived) title.append(element("span", "badge", "보관됨"));
+        info.append(title, element("p", "repo-description small", repo.description || "등록된 저장소 설명이 없습니다."),
+          element("p", "repo-meta", repo.fullName + " · 기본 브랜치 " + repo.defaultBranch));
+        const status = element("span", "link-status" + (repo.linked ? " linked" : ""));
+        status.append(element("span", "dot"), document.createTextNode(repo.disabled ? "비활성 · 숨김" : repo.linked ? "스토어 연동됨" : "미연동"));
+        const button = element("button", "repo-button", repo.linked ? "연동 해제" : "연동");
+        button.type = "button";
+        button.dataset.linked = String(repo.linked);
+        button.dataset.repo = repo.fullName;
+        button.disabled = busy || repo.disabled;
+        button.dataset.disabled = String(!!repo.disabled);
+        button.setAttribute("aria-label", repo.fullName + (repo.linked ? " 연동 해제" : " 연동"));
+        button.addEventListener("click", () => save(repo, {linked: !repo.linked}));
+        const visibility = element("button", "repo-button", repo.disabled ? "활성화" : "비활성화");
+        visibility.type = "button";
+        visibility.disabled = busy;
+        visibility.dataset.repo = repo.fullName;
+        visibility.dataset.action = "visibility";
+        visibility.setAttribute("aria-label", repo.fullName + (repo.disabled ? " 활성화" : " 비활성화"));
+        visibility.addEventListener("click", () => save(repo, {disabled: !repo.disabled}));
+        const actions = element("div", "repo-actions");
+        actions.append(button, visibility);
+        row.append(info, status, actions);
+        list.append(row);
+      });
+    }
+    async function load() {
+      setBusy(true);
+      try {
+        const data = await api("GET");
+        if (!Array.isArray(data.repositories) || !Array.isArray(data.owners)) throw new Error("저장소 목록 형식이 올바르지 않습니다.");
+        repositories = data.repositories;
+        owners = data.owners;
+        const selectedOwner = byId("owner").value;
+        byId("owner").replaceChildren(new Option("전체 계정", ""), ...owners.map(owner => new Option(owner, owner)));
+        if (owners.includes(selectedOwner)) byId("owner").value = selectedOwner;
+        byId("updated-at").textContent = data.updatedAt ? "서버 갱신 · " + data.updatedAt : "";
+        const firstLogin = byId("dashboard").hidden;
+        byId("login").hidden = true;
+        byId("dashboard").hidden = false;
+        byId("logout").hidden = false;
+        byId("login-error").hidden = true;
+        render();
+        if (firstLogin) byId("page-title").focus();
+        notice("공개 저장소 목록을 불러왔습니다.");
+      } catch (error) {
+        if (error.name !== "AbortError") notice(error instanceof TypeError ? "서버에 연결하지 못했습니다. 네트워크와 Worker 주소를 확인한 뒤 다시 시도하세요." : error.message, "error");
+        if (byId("dashboard").hidden) token = "";
+      } finally { setBusy(false); }
+    }
+    async function save(repo, changes) {
+      if (busy) return;
+      setBusy(true);
+      try {
+        const data = await api("PUT", { fullName: repo.fullName, ...changes });
+        if (data.fullName !== repo.fullName || typeof data.linked !== "boolean" || typeof data.disabled !== "boolean") throw new Error("변경 응답을 확인할 수 없습니다. 목록을 새로고침해 실제 상태를 확인하세요.");
+        repo.linked = data.linked;
+        repo.disabled = data.disabled;
+        render();
+        const message = data.disabled ? "비활성화했습니다. 두 기본 목록에서 숨기며 연동 선택은 유지됩니다." : changes.disabled === false && !data.linked ? "활성화했습니다. 필요하면 저장소를 연동해 주세요." : !data.linked ? "연동을 해제했습니다. GitHub 원본 릴리스는 유지됩니다." : data.syncRequested ? "변경을 저장하고 동기화를 요청했습니다." : "설정을 저장했습니다. 매일 03:00(KST)에 동기화됩니다. 지금 반영하려면 ‘동기화 실행’을 눌러 GitHub에서 실행하세요.";
+        notice(message + (data.message ? " " + data.message : ""), data.disabled || !data.linked || data.syncRequested ? "success" : "warning");
+      } catch (error) {
+        if (error.name !== "AbortError") notice(error instanceof TypeError ? "서버에 연결하지 못했습니다. 변경 반영 여부는 목록을 새로고침해 확인하세요." : error.message, "error");
+      } finally {
+        setBusy(false);
+        if (!byId("dashboard").hidden) (Array.from(byId("repo-list").querySelectorAll("button")).find(button => button.dataset.repo === repo.fullName && button.dataset.action === "visibility") || byId("show-disabled")).focus();
+      }
+    }
+    byId("login-form").addEventListener("submit", event => {
+      event.preventDefault();
+      if (busy) return;
+      token = byId("token").value.trim();
+      byId("token").value = "";
+      if (token) load();
+    });
+    byId("refresh").addEventListener("click", load);
+    byId("logout").addEventListener("click", logout);
+    byId("search").addEventListener("input", render);
+    byId("owner").addEventListener("change", render);
+    byId("link-filter").addEventListener("change", render);
+    byId("show-disabled").addEventListener("change", render);
+  </script>
+</body>
+</html>
