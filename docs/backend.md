@@ -45,7 +45,7 @@ python scripts/store_manifest.py --apk path\signed.apk --metadata scripts/store-
 
 공개 실행기는 `scripts/sync_catalog.py`를 사용하고, 중앙 저장소의 `scripts/sync_free.py`도 같은 게시 계약을 구현합니다. 인증된 `/api/admin/sync`에서 내부 목록과 두 ETag를 읽고 APK 검사 후 후보를 PUT합니다. 서버가 현재 연동/비활성 설정과 서명 연속성을 다시 검사합니다. APK는 GitHub에 그대로 있고 Cloudflare로 전송하지 않습니다.
 
-최대 연결100개, 앱당 릴리스100개, JSON2MB, APK512MiB, 작업당 GitHub4000요청/총8GB 전송으로 제한합니다. 한도를 넘으면 기존 목록을 보존하며 중단합니다. GitHub private 저장소의 포함 실행량을 사용하며 유료 spending limit을 늘리지 않습니다.
+최대 연결100개, 앱당 릴리스100개, JSON2MB, APK512MiB, 작업당 GitHub4000요청/총8GB 전송으로 제한합니다. 한도를 넘으면 기존 목록을 보존하며 중단합니다. 공개 실행 저장소의 기본 무료 runner를 사용하며 유료 spending limit을 늘리지 않습니다.
 
 ## 로컬 관리자 키 확인
 

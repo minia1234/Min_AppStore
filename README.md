@@ -8,7 +8,7 @@
 
 ## 무료 운영 구조
 
-**R2·유료 플랜·결제수단 등록을 사용하지 않습니다.** APK와 이미지는 공개 GitHub Releases/원본 URL에 두고, Cloudflare Workers + SQLite Durable Object에는 앱 목록과 연동·비활성 설정만 저장합니다. Workers Free의 한도를 넘으면 서비스가 제한됩니다. 계정 플랜을 유료로 전환하는 코드는 없습니다. GitHub Actions는 기본 Linux 실행기와 계정에 포함된 무료 실행량을 사용하며, 유료 예산을 설정하거나 늘리지 않습니다.
+**R2·유료 플랜·결제수단 등록을 사용하지 않습니다.** APK와 이미지는 공개 GitHub Releases/원본 URL에 두고, Cloudflare Workers + SQLite Durable Object에는 앱 목록과 연동·비활성 설정만 저장합니다. Workers Free의 한도를 넘으면 서비스가 제한됩니다. 계정 플랜을 유료로 전환하는 코드는 없습니다. 자동 동기화는 공개 저장소의 기본 무료 Linux 실행기를 사용하며, 유료 예산을 설정하거나 늘리지 않습니다.
 
 관리자가 `minia1234`, `AIProject-k` 두 계정의 공개 저장소를 조회해 연동합니다. 신규 저장소는 기본 미연동입니다. **비활성화**는 연동을 유지하며 관리자 기본 목록·스토어 목록과 직접 다운로드 경로에서 숨깁니다. **비활성 항목 보기**에서 복원할 수 있습니다. GitHub 원본은 삭제하지 않습니다.
 
@@ -50,6 +50,6 @@ python -m unittest discover -s scripts/tests -v
 
 ## 비밀키·배포
 
-운영 관리자 키는 Worker secret과 이 저장소의 GitHub Actions secret `MINAPPSTORE_ADMIN_TOKEN`에만 설정합니다. Android·카탈로그·소스·URL에 키를 넣지 않습니다. [운영 안내](docs/backend.md)의 절차를 따릅니다.
+운영 관리자 키는 Worker secret과 공개 실행 저장소 `AIProject-k/ApplicationTest`의 Actions secret `MINAPPSTORE_ADMIN_TOKEN`에 설정합니다. Android·카탈로그·소스·URL에 키를 넣지 않습니다. 비공개 중앙 저장소에는 불필요한 관리자 secret을 남기지 않았습니다. [운영 안내](docs/backend.md)의 절차를 따릅니다.
 
 현재 소스 저장소가 비공개라 그 private release의 APK를 일반 사용자에게 직접 배포하지 않습니다. 일반 앱 배포에는 공개 릴리스를 사용합니다. 앱스토어 자체 공개 배포는 별도의 공개 배포 저장소를 정한 뒤 연결해야 합니다.
