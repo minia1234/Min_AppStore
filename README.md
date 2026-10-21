@@ -4,7 +4,7 @@
 
 - [운영 API](https://minappstore-api.eum-user.workers.dev/api/catalog)
 - [관리자 화면](https://minappstore-api.eum-user.workers.dev/admin)
-- [동기화 실행](https://github.com/minia1234/Min_AppStore/actions/workflows/sync-store.yml)
+- [무료 동기화 실행](https://github.com/AIProject-k/ApplicationTest/actions/workflows/store-sync.yml)
 
 ## 무료 운영 구조
 
@@ -12,7 +12,9 @@
 
 관리자가 `minia1234`, `AIProject-k` 두 계정의 공개 저장소를 조회해 연동합니다. 신규 저장소는 기본 미연동입니다. **비활성화**는 연동을 유지하며 관리자 기본 목록·스토어 목록과 직접 다운로드 경로에서 숨깁니다. **비활성 항목 보기**에서 복원할 수 있습니다. GitHub 원본은 삭제하지 않습니다.
 
-저장된 연동은 매일 **03:00(KST)** GitHub Actions에서 동기화합니다. 지금 반영하려면 관리자 화면의 **동기화 실행** 링크에서 `Run workflow`를 실행합니다. 넓은 GitHub 계정 토큰을 Cloudflare에 저장하지 않습니다. 릴리스 즉시 알림용 전용 토큰은 선택 사항입니다.
+저장된 연동은 공개 저장소 `AIProject-k/ApplicationTest`의 무료 GitHub Actions에서 매일 **03:00(KST)** 동기화합니다. 해당 저장소의 릴리스 게시 시에도 실행합니다. 지금 반영하려면 관리자 화면의 **동기화 실행** 링크에서 `Run workflow`를 실행합니다. 넓은 GitHub 계정 토큰을 Cloudflare에 저장하지 않습니다.
+
+비공개 중앙 저장소의 Actions는 계정 결제 문제/지출 제한으로 실행이 차단된 상태라 자동 실행하지 않습니다. 사용자가 승인한 워크플로·검사 스크립트 두 파일만 공개 테스트 저장소에 추가했습니다. Android·관리 화면 소스는 비공개로 유지합니다.
 
 ## Android
 
@@ -43,6 +45,8 @@ python -m unittest discover -s scripts/tests -v
 동기화는 실제 공개 APK를 내려받아 Android SDK로 검증합니다. 오래된 스냅샷이나 관리자 연동 상태가 바뀌면 서버가 게시를 거부해 최신 설정을 보호합니다. 이미 검증한 앱의 패키지·서명·기존 APK 해시 변경도 차단합니다.
 
 별도 테스트 앱 [ApplicationTest](https://github.com/AIProject-k/ApplicationTest)의 v1.0.0 → v1.0.1 업데이트는 Pixel 4에서 확인했습니다. 운영 환경 확인 결과는 [운영 안내](docs/backend.md)에 구분합니다.
+
+실제 Cloudflare·무료 GitHub Actions·Pixel4 운영 연결 결과는 [배포 검증 기록](docs/cloud-deployment-verification.md)에 있습니다.
 
 ## 비밀키·배포
 

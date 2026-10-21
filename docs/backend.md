@@ -39,11 +39,11 @@ python scripts/store_manifest.py --apk path\signed.apk --metadata scripts/store-
 
 ## 동기화
 
-`.github/workflows/sync-store.yml`은 매일 UTC18:00(한국03:00), 중앙 릴리스 게시, 수동 실행을 지원합니다. 무료 제공량을 아끼기 위해 빈번한 폴링은 하지 않습니다. 즉시 반영하려면 관리자 상단 **동기화 실행** 링크에서 GitHub `Run workflow`를 누릅니다.
+공개 `AIProject-k/ApplicationTest`의 `.github/workflows/store-sync.yml`은 매일 UTC18:00(한국03:00), 해당 저장소 릴리스 게시, 수동 실행을 지원합니다. 즉시 반영하려면 관리자 상단 **동기화 실행** 링크에서 GitHub `Run workflow`를 누릅니다. 비공개 저장소는 결제/지출 제한으로 runner가 시작되지 않았으며, 지출 한도를 올리지 않고 공개 저장소의 표준 무료 Linux runner로 이동했습니다.
 
-저장소 변수 `STORE_ORIGIN`은 운영 Worker origin입니다. 저장소 secret `MINAPPSTORE_ADMIN_TOKEN`은 Worker `ADMIN_TOKEN`과 같습니다. 공개 GitHub 조회에는 job의 한시적 `GITHUB_TOKEN`을 사용하고 이를 Worker에 저장하지 않습니다. R2/S3 자격증명은 필요 없습니다.
+공개 실행 저장소의 변수 `STORE_ORIGIN`은 운영 Worker origin입니다. 해당 저장소 secret `MINAPPSTORE_ADMIN_TOKEN`은 Worker `ADMIN_TOKEN`과 같습니다. 공개 GitHub 조회에는 job의 한시적 `GITHUB_TOKEN`을 사용하고 이를 Worker에 저장하지 않습니다. 키는 공개 코드에 들어가지 않습니다. R2/S3 자격증명은 필요 없습니다.
 
-동기화 스크립트 `scripts/sync_free.py`는 인증된 `/api/admin/sync`에서 내부 목록과 두 ETag를 읽고, APK 검사 후 후보를 PUT합니다. 서버가 현재 연동/비활성 설정과 패키지·서명 연속성을 다시 검사합니다. APK는 GitHub에 그대로 있고 Cloudflare로 전송하지 않습니다.
+공개 실행기는 `scripts/sync_catalog.py`를 사용하고, 중앙 저장소의 `scripts/sync_free.py`도 같은 게시 계약을 구현합니다. 인증된 `/api/admin/sync`에서 내부 목록과 두 ETag를 읽고 APK 검사 후 후보를 PUT합니다. 서버가 현재 연동/비활성 설정과 서명 연속성을 다시 검사합니다. APK는 GitHub에 그대로 있고 Cloudflare로 전송하지 않습니다.
 
 최대 연결100개, 앱당 릴리스100개, JSON2MB, APK512MiB, 작업당 GitHub4000요청/총8GB 전송으로 제한합니다. 한도를 넘으면 기존 목록을 보존하며 중단합니다. GitHub private 저장소의 포함 실행량을 사용하며 유료 spending limit을 늘리지 않습니다.
 
@@ -58,7 +58,7 @@ $credential = [PSCredential]::new('admin', $secure)
 Set-Clipboard $credential.GetNetworkCredential().Password
 ```
 
-다른 PC에서는 관리자가 별도 키를 발급해 `npx wrangler secret put ADMIN_TOKEN`과 `gh secret set MINAPPSTORE_ADMIN_TOKEN --repo minia1234/Min_AppStore`에 각각 안전하게 입력합니다. 키는 명령줄 인자나 커밋된 파일로 전달하지 않습니다.
+다른 PC에서는 관리자가 별도 키를 발급해 `npx wrangler secret put ADMIN_TOKEN`과 `gh secret set MINAPPSTORE_ADMIN_TOKEN --repo AIProject-k/ApplicationTest`에 각각 안전하게 입력합니다. 키는 명령줄 인자나 커밋된 파일로 전달하지 않습니다.
 
 ## 배포
 

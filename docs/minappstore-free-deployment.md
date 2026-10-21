@@ -13,4 +13,6 @@
 
 실제 배포 URL: `https://minappstore-api.eum-user.workers.dev`. 관리자: `/admin`. 넓은 GitHub OAuth 자격증명을 Worker로 복사하지 않는다. 전용 관리자 secret만 새로 발급해 Worker와 지정한 비공개 저장소의 Actions secret으로 연결했다. 즉시 workflow dispatch용 세분화 토큰은 설정하지 않고, 매일 03:00 KST와 수동 실행을 사용한다. 관리자에 GitHub Actions 실행 링크를 제공한다.
 
+실행 후 비공개 저장소의 runner가 결제 실패/지출 제한으로 시작되지 않는 것을 확인했다. 사용자가 승인한 두 파일만 공개 `AIProject-k/ApplicationTest`에 추가해 무료 runner로 옮겼다. 최종 관리자 secret과 일일/릴리스/수동 동기화는 공개 실행 저장소에 설정한다. 비공개 소스/기기 기록은 공개하지 않는다.
+
 GitHub private 저장소의 Actions 무료 사용량은 별도 제한이 있으므로 해당 저장소의 spending limit을 늘리지 않는다. 중앙 소스가 비공개인 점 때문에 자체 앱 APK를 그 저장소의 private release로 일반 사용자에게 직접 전달할 수는 없다. 일반 앱 배포는 기존 공개 ApplicationTest 같은 저장소가 담당한다. 자체 배포본은 별도 공개 배포 경로를 명시하기 전까지 비공개 소스의 릴리스 artifact로만 제공한다.

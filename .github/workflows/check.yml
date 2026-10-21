@@ -1,7 +1,6 @@
 name: Check MinAppStore
 on:
-  push:
-  pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
@@ -32,6 +31,9 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: android-actions/setup-android@v3
+        with:
+          packages: 'build-tools;36.0.0 platforms;android-36'
+          log-accepted-android-sdk-licenses: false
       - name: Check Android
         working-directory: android
         run: |

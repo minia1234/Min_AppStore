@@ -38,6 +38,9 @@ jobs:
         with:
           python-version: '3.11'
       - uses: android-actions/setup-android@v3
+        with:
+          packages: 'build-tools;36.0.0 platforms;android-36'
+          log-accepted-android-sdk-licenses: false
       - name: Validate release inputs and restore signing key
         env:
           KEYSTORE_BASE64: ${{ secrets.STORE_KEYSTORE_BASE64 }}
