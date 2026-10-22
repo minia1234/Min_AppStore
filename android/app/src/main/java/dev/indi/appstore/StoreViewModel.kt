@@ -30,7 +30,7 @@ class StoreViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try { block() } catch (failure: Exception) {
                 if (failure is kotlinx.coroutines.CancellationException) throw failure
-                mutableState.update { it.copy(error = failure.message ?: "작업을 완료하지 못했습니다.") }
+                mutableState.update { it.copy(error = failure.storeMessage(repo.context)) }
             }
         }
     }

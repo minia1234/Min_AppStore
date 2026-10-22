@@ -9,10 +9,8 @@ object StoreRules {
 
     fun normalizeOrigin(value: String): String {
         val uri = URI(value.trim())
-        require(uri.scheme == "https" && !uri.host.isNullOrBlank() && uri.rawUserInfo == null &&
-            uri.rawQuery == null && uri.rawFragment == null && (uri.path.isEmpty() || uri.path == "/")) {
-            "경로·계정 정보가 없는 HTTPS 서버 주소를 입력해 주세요."
-        }
+        if (!(uri.scheme == "https" && !uri.host.isNullOrBlank() && uri.rawUserInfo == null &&
+            uri.rawQuery == null && uri.rawFragment == null && (uri.path.isEmpty() || uri.path == "/"))) throw StoreFailure(R.string.invalid_origin)
         return uri.toASCIIString().trimEnd('/')
     }
 
@@ -30,11 +28,11 @@ object StoreRules {
         return count == size && digest.digest().hex() == sha256.lowercase()
     }
 
-    fun apkProblem(actualPackage: String, actualVersion: Long, actualSigners: Set<String>, expectedPackage: String, expectedVersion: Long, expectedSigner: String, installedVersion: Long?): String? = when {
-        actualPackage != expectedPackage -> "APK 패키지 이름이 일치하지 않습니다."
-        actualVersion != expectedVersion -> "APK 버전이 일치하지 않습니다."
-        actualSigners != setOf(expectedSigner) -> "APK 서명이 등록된 서명과 다릅니다."
-        installedVersion != null && actualVersion < installedVersion -> "설치된 앱보다 이전 버전은 설치할 수 없습니다."
+    fun apkProblem(actualPackage: String, actualVersion: Long, actualSigners: Set<String>, expectedPackage: String, expectedVersion: Long, expectedSigner: String, installedVersion: Long?): Int? = when {
+        actualPackage != expectedPackage -> R.string.package_mismatch
+        actualVersion != expectedVersion -> R.string.version_mismatch
+        actualSigners != setOf(expectedSigner) -> R.string.signer_mismatch
+        installedVersion != null && actualVersion < installedVersion -> R.string.downgrade_blocked
         else -> null
     }
 }

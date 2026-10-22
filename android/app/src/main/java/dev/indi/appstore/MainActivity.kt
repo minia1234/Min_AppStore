@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
                 if (Build.VERSION.SDK_INT >= 33) notifications.launch(Manifest.permission.POST_NOTIFICATIONS)
             }, model::queue, model::cancel, ::install, { packageName ->
                 packageManager.getLaunchIntentForPackage(packageName)?.let { startActivity(it) }
-                    ?: model.showError("이 앱의 실행 화면을 찾을 수 없습니다.")
+                    ?: model.showError(this@MainActivity.getString(R.string.app_not_launchable))
             }, model::queueUpdates, model::dismissError)
         }
     }
@@ -57,7 +57,7 @@ class MainActivity : ComponentActivity() {
         if (!packageManager.canRequestPackageInstalls()) {
             pendingInstall = entry.id
             try { unknownSources.launch(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName"))) }
-            catch (_: Exception) { model.showError("기기 설정에서 MinAppStore의 앱 설치 권한을 허용해 주세요.") }
+            catch (_: Exception) { model.showError(this@MainActivity.getString(R.string.install_permission_needed)) }
             return
         }
         installationStarting = true
@@ -65,7 +65,7 @@ class MainActivity : ComponentActivity() {
             try { withContext(Dispatchers.IO) { ApkInstaller.install(this@MainActivity, entry) } }
             catch (failure: Exception) {
                 if (failure is kotlinx.coroutines.CancellationException) throw failure
-                model.showError(failure.message ?: "설치를 시작할 수 없습니다.")
+                model.showError(failure.storeMessage(this@MainActivity, R.string.install_start_failed))
             } finally { installationStarting = false }
         }
     }

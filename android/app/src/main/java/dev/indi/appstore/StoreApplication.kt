@@ -16,7 +16,7 @@ class StoreApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         getSystemService(NotificationManager::class.java).createNotificationChannel(
-            NotificationChannel("updates", "앱 업데이트", NotificationManager.IMPORTANCE_DEFAULT))
+            NotificationChannel("updates", this.getString(R.string.updates_channel), NotificationManager.IMPORTANCE_DEFAULT))
         WorkManager.getInstance(this).enqueueUniquePeriodicWork("update-check", ExistingPeriodicWorkPolicy.KEEP,
             PeriodicWorkRequestBuilder<UpdateWorker>(24, TimeUnit.HOURS)
                 .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()).build())

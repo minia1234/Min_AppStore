@@ -142,6 +142,98 @@
   <footer>MinAppStore · PRIVATE MANAGEMENT</footer>
   <script>
     "use strict";
+    const language = (navigator.languages?.[0] || navigator.language || "en").toLowerCase().startsWith("ko") ? "ko" : "en";
+    const translations = {
+      "저장소 관리 · MinAppStore": "Repository management · MinAppStore",
+      "ADMIN · 저장소 관리": "ADMIN · Repository management",
+      "로그아웃": "Log out",
+      "나의 앱을": "Your apps,",
+      "한곳에.": "one place.",
+      "공개 GitHub 저장소를 선택해": "Choose public GitHub repositories",
+      "MinAppStore와 연결하세요.": "to connect to MinAppStore.",
+      "서버에서 허용한 두 계정의 공개 저장소만 관리합니다.": "Manage public repositories from the two allowed accounts.",
+      "스토어 관리에 로그인": "Sign in to manage your store",
+      "Worker에 설정한 관리자 토큰을 입력하세요.": "Enter the admin token configured on your Worker.",
+      "관리자 토큰": "Admin token",
+      "관리자 토큰 입력": "Enter admin token",
+      "저장소 관리 시작하기": "Manage repositories",
+      "토큰은 이 페이지의 메모리에만 보관합니다. 새로고침하거나 로그아웃하면 다시 입력해야 합니다. Android 앱에는 저장하지 않습니다.": "The token stays in this tab only. Enter it again after refreshing or logging out. It is not stored in the Android app.",
+      "저장소 관리": "Repository management",
+      "스토어에 연결할 공개 저장소를 직접 선택하세요.": "Choose the public repositories to connect to your store.",
+      "동기화 실행": "Run sync",
+      "목록 새로고침": "Refresh list",
+      "서버에서 조회한 저장소 현황": "Repository overview from the server",
+      "전체 공개 저장소": "Public repositories",
+      "스토어 연동": "Linked to store",
+      "미연동": "Not linked",
+      "저장소 검색": "Search repositories",
+      "이름이나 설명으로 찾아보세요": "Search by name or description",
+      "GitHub 계정": "GitHub account",
+      "전체 계정": "All accounts",
+      "연동 상태": "Link status",
+      "전체 상태": "All statuses",
+      "연동됨": "Linked",
+      "비활성 항목 보기 · 다시 활성화할 수 있습니다": "Show disabled items · You can enable them again",
+      "공개 저장소": "Public repositories",
+      "연동하면 어떻게 되나요?": "What happens when I link a repository?",
+      "실제 APK와 릴리스 정보를 검증한 앱만 스토어에 표시됩니다. 연결만으로 즉시 등록되지는 않습니다.": "Apps appear after their APK and release metadata are verified. Linking alone does not publish an app immediately.",
+      "비활성화는 숨기기입니다": "Disabling hides an app",
+      "연동 선택을 유지하며 이 기본 목록과 스토어 앱 목록에서 숨깁니다. 비활성 항목 보기에서 복원할 수 있습니다. 연동 해제와 비활성화 모두 GitHub 원본을 삭제하지 않습니다.": "The link is kept while the app is hidden from both default lists. Restore it with Show disabled items. Neither unlinking nor disabling deletes the GitHub originals.",
+      "목록을 확인하고 있어요…": "Loading repositories…",
+      "저장소 관리 시작하기 →": "Manage repositories →",
+      "관리자 토큰이 올바르지 않거나 만료되었습니다. 다시 로그인하세요.": "The admin token is invalid or expired. Sign in again.",
+      "서버에서 다른 변경을 처리 중입니다. 잠시 후 다시 시도하세요. 현재 목록은 유지됩니다.": "Another change is in progress. Try again shortly. The current list is preserved.",
+      "서버에서 요청을 처리하지 못했습니다. 잠시 후 다시 시도하세요.": "The server could not process the request. Try again shortly.",
+      "서버 응답을 읽을 수 없습니다. 연결 주소와 서버 상태를 확인하세요.": "Unable to read the response. Check the server address and status.",
+      "검색 결과가 없어요": "No results",
+      "조회된 공개 저장소가 없어요": "No public repositories found",
+      "검색어나 필터를 변경해 보세요.": "Change your search or filters.",
+      "계정의 공개 저장소와 서버 연결 상태를 확인하세요.": "Check the public repositories and server connection.",
+      " GitHub에서 보기, 새 창": " on GitHub, opens a new tab",
+      "보관됨": "Archived",
+      "등록된 저장소 설명이 없습니다.": "No repository description provided.",
+      " · 기본 브랜치 ": " · Default branch ",
+      "비활성 · 숨김": "Disabled · Hidden",
+      "스토어 연동됨": "Linked to store",
+      "연동 해제": "Unlink",
+      "연동": "Link",
+      " 연동 해제": " · Unlink",
+      " 연동": " · Link",
+      "활성화": "Enable",
+      "비활성화": "Disable",
+      " 활성화": " · Enable",
+      " 비활성화": " · Disable",
+      "저장소 목록 형식이 올바르지 않습니다.": "Invalid repository list format.",
+      "저장소 목록 기준 · ": "Repository inventory · ",
+      "서버 갱신 · ": "Server updated · ",
+      " · 최신 목록은 동기화 실행 후 반영됩니다": " · Run sync to update the inventory",
+      "공개 저장소 목록을 불러왔습니다.": "Public repositories loaded.",
+      "서버에 연결하지 못했습니다. 네트워크와 Worker 주소를 확인한 뒤 다시 시도하세요.": "Unable to connect. Check your network and Worker address, then try again.",
+      "변경 응답을 확인할 수 없습니다. 목록을 새로고침해 실제 상태를 확인하세요.": "Unable to verify the change response. Refresh the list to check the saved state.",
+      "비활성화했습니다. 두 기본 목록에서 숨기며 연동 선택은 유지됩니다.": "Disabled and hidden from both default lists. The link is preserved.",
+      "활성화했습니다. 필요하면 저장소를 연동해 주세요.": "Enabled. Link the repository if needed.",
+      "연동을 해제했습니다. GitHub 원본 릴리스는 유지됩니다.": "Unlinked. The original GitHub releases are preserved.",
+      "변경을 저장하고 동기화를 요청했습니다.": "Changes saved and sync requested.",
+      "설정을 저장했습니다. 매일 03:00(KST)에 동기화됩니다. 지금 반영하려면 ‘동기화 실행’을 눌러 GitHub에서 실행하세요.": "Settings saved. Sync runs daily at 03:00 KST. To apply now, open Run sync and start the workflow on GitHub.",
+      "서버에 연결하지 못했습니다. 변경 반영 여부는 목록을 새로고침해 확인하세요.": "Unable to connect. Refresh the list to check whether the changes were saved."
+};
+    const tr = text => language === "en" ? translations[text] ?? text : text;
+    document.documentElement.lang = language;
+    document.title = tr(document.title);
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (node.parentElement.closest("script,style")) continue;
+      const text = node.textContent.trim();
+      if (text && translations[text]) node.textContent = node.textContent.replace(text, tr(text));
+    }
+    document.querySelectorAll("[placeholder],[aria-label]").forEach(node => {
+      for (const attribute of ["placeholder", "aria-label"]) {
+        const value = node.getAttribute(attribute);
+        if (value) node.setAttribute(attribute, tr(value));
+      }
+    });
+
     const byId = id => document.getElementById(id);
     let token = "";
     let repositories = [];
@@ -160,7 +252,7 @@
     function setBusy(value) {
       busy = value;
       byId("login-button").disabled = value;
-      byId("login-button").textContent = value ? "목록을 확인하고 있어요…" : "저장소 관리 시작하기 →";
+      byId("login-button").textContent = value ? tr("목록을 확인하고 있어요…") : tr("저장소 관리 시작하기 →");
       byId("refresh").disabled = value;
       byId("repo-list").setAttribute("aria-busy", String(value));
       byId("repo-list").querySelectorAll("button").forEach(button => { button.disabled = value || button.dataset.disabled === "true"; });
@@ -174,7 +266,7 @@
       byId("search").value = "";
       byId("link-filter").value = "";
       byId("show-disabled").checked = false;
-      byId("owner").replaceChildren(new Option("전체 계정", ""));
+      byId("owner").replaceChildren(new Option(tr("전체 계정"), ""));
       byId("repo-list").replaceChildren();
       byId("updated-at").textContent = "";
       ["total-count", "linked-count", "unlinked-count", "result-count"].forEach(id => { byId(id).textContent = ""; });
@@ -192,14 +284,14 @@
       request = new AbortController();
       const response = await fetch(endpoint, {
         method, credentials: "omit", cache: "no-store", signal: request.signal,
-        headers: { Authorization: "Bearer " + token, ...(payload ? { "Content-Type": "application/json" } : {}) },
+        headers: { "Accept-Language": language, Authorization: "Bearer " + token, ...(payload ? { "Content-Type": "application/json" } : {}) },
         ...(payload ? { body: JSON.stringify(payload) } : {})
       });
-      if (response.status === 401) { logout(); throw new Error("관리자 토큰이 올바르지 않거나 만료되었습니다. 다시 로그인하세요."); }
-      if (response.status === 409) throw new Error("서버에서 다른 변경을 처리 중입니다. 잠시 후 다시 시도하세요. 현재 목록은 유지됩니다.");
+      if (response.status === 401) { logout(); throw new Error(tr("관리자 토큰이 올바르지 않거나 만료되었습니다. 다시 로그인하세요.")); }
+      if (response.status === 409) throw new Error(tr("서버에서 다른 변경을 처리 중입니다. 잠시 후 다시 시도하세요. 현재 목록은 유지됩니다."));
       const result = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(result?.message || result?.error || "서버에서 요청을 처리하지 못했습니다. 잠시 후 다시 시도하세요.");
-      if (!result) throw new Error("서버 응답을 읽을 수 없습니다. 연결 주소와 서버 상태를 확인하세요.");
+      if (!response.ok) throw new Error(result?.message || result?.error || tr("서버에서 요청을 처리하지 못했습니다. 잠시 후 다시 시도하세요."));
+      if (!result) throw new Error(tr("서버 응답을 읽을 수 없습니다. 연결 주소와 서버 상태를 확인하세요."));
       return result;
     }
     function element(tag, className, text) {
@@ -219,13 +311,13 @@
       const filtered = repositories.filter(repo => (byId("show-disabled").checked || !repo.disabled) && (!owner || repo.owner === owner) &&
         (!filter || repo.linked === (filter === "linked")) &&
         [repo.name, repo.fullName, repo.description || ""].some(value => value.toLocaleLowerCase().includes(query)));
-      byId("result-count").textContent = filtered.length + "개";
+      byId("result-count").textContent = new Intl.NumberFormat(language).format(filtered.length) + (language === "ko" ? "개" : " results");
       const list = byId("repo-list");
       list.replaceChildren();
       if (!filtered.length) {
         const empty = element("div", "empty");
-        empty.append(element("strong", "", repositories.length ? "검색 결과가 없어요" : "조회된 공개 저장소가 없어요"),
-          element("p", "muted small", repositories.length ? "검색어나 필터를 변경해 보세요." : "계정의 공개 저장소와 서버 연결 상태를 확인하세요."));
+        empty.append(element("strong", "", repositories.length ? tr("검색 결과가 없어요") : tr("조회된 공개 저장소가 없어요")),
+          element("p", "muted small", repositories.length ? tr("검색어나 필터를 변경해 보세요.") : tr("계정의 공개 저장소와 서버 연결 상태를 확인하세요.")));
         list.append(empty);
       }
       filtered.forEach(repo => {
@@ -236,27 +328,27 @@
         link.href = "https://github.com/" + repo.fullName.split("/").map(encodeURIComponent).join("/");
         link.target = "_blank";
         link.rel = "noopener noreferrer";
-        link.setAttribute("aria-label", repo.fullName + " GitHub에서 보기, 새 창");
+        link.setAttribute("aria-label", repo.fullName + tr(" GitHub에서 보기, 새 창"));
         title.append(link);
-        if (repo.archived) title.append(element("span", "badge", "보관됨"));
-        info.append(title, element("p", "repo-description small", repo.description || "등록된 저장소 설명이 없습니다."),
-          element("p", "repo-meta", repo.fullName + " · 기본 브랜치 " + repo.defaultBranch));
+        if (repo.archived) title.append(element("span", "badge", tr("보관됨")));
+        info.append(title, element("p", "repo-description small", repo.description || tr("등록된 저장소 설명이 없습니다.")),
+          element("p", "repo-meta", repo.fullName + tr(" · 기본 브랜치 ") + repo.defaultBranch));
         const status = element("span", "link-status" + (repo.linked ? " linked" : ""));
-        status.append(element("span", "dot"), document.createTextNode(repo.disabled ? "비활성 · 숨김" : repo.linked ? "스토어 연동됨" : "미연동"));
-        const button = element("button", "repo-button", repo.linked ? "연동 해제" : "연동");
+        status.append(element("span", "dot"), document.createTextNode(repo.disabled ? tr("비활성 · 숨김") : repo.linked ? tr("스토어 연동됨") : tr("미연동")));
+        const button = element("button", "repo-button", repo.linked ? tr("연동 해제") : tr("연동"));
         button.type = "button";
         button.dataset.linked = String(repo.linked);
         button.dataset.repo = repo.fullName;
         button.disabled = busy || repo.disabled;
         button.dataset.disabled = String(!!repo.disabled);
-        button.setAttribute("aria-label", repo.fullName + (repo.linked ? " 연동 해제" : " 연동"));
+        button.setAttribute("aria-label", repo.fullName + (repo.linked ? tr(" 연동 해제") : tr(" 연동")));
         button.addEventListener("click", () => save(repo, {linked: !repo.linked}));
-        const visibility = element("button", "repo-button", repo.disabled ? "활성화" : "비활성화");
+        const visibility = element("button", "repo-button", repo.disabled ? tr("활성화") : tr("비활성화"));
         visibility.type = "button";
         visibility.disabled = busy;
         visibility.dataset.repo = repo.fullName;
         visibility.dataset.action = "visibility";
-        visibility.setAttribute("aria-label", repo.fullName + (repo.disabled ? " 활성화" : " 비활성화"));
+        visibility.setAttribute("aria-label", repo.fullName + (repo.disabled ? tr(" 활성화") : tr(" 비활성화")));
         visibility.addEventListener("click", () => save(repo, {disabled: !repo.disabled}));
         const actions = element("div", "repo-actions");
         actions.append(button, visibility);
@@ -268,13 +360,13 @@
       setBusy(true);
       try {
         const data = await api("GET");
-        if (!Array.isArray(data.repositories) || !Array.isArray(data.owners)) throw new Error("저장소 목록 형식이 올바르지 않습니다.");
+        if (!Array.isArray(data.repositories) || !Array.isArray(data.owners)) throw new Error(tr("저장소 목록 형식이 올바르지 않습니다."));
         repositories = data.repositories;
         owners = data.owners;
         const selectedOwner = byId("owner").value;
-        byId("owner").replaceChildren(new Option("전체 계정", ""), ...owners.map(owner => new Option(owner, owner)));
+        byId("owner").replaceChildren(new Option(tr("전체 계정"), ""), ...owners.map(owner => new Option(owner, owner)));
         if (owners.includes(selectedOwner)) byId("owner").value = selectedOwner;
-        byId("updated-at").textContent = (data.inventoryUpdatedAt ? "저장소 목록 기준 · " + data.inventoryUpdatedAt : data.updatedAt ? "서버 갱신 · " + data.updatedAt : "") + (data.inventoryStale ? " · 최신 목록은 동기화 실행 후 반영됩니다" : "");
+        byId("updated-at").textContent = (data.inventoryUpdatedAt ? tr("저장소 목록 기준 · ") + data.inventoryUpdatedAt : data.updatedAt ? tr("서버 갱신 · ") + data.updatedAt : "") + (data.inventoryStale ? tr(" · 최신 목록은 동기화 실행 후 반영됩니다") : "");
         const firstLogin = byId("dashboard").hidden;
         byId("login").hidden = true;
         byId("dashboard").hidden = false;
@@ -282,9 +374,9 @@
         byId("login-error").hidden = true;
         render();
         if (firstLogin) byId("page-title").focus();
-        notice("공개 저장소 목록을 불러왔습니다.");
+        notice(tr("공개 저장소 목록을 불러왔습니다."));
       } catch (error) {
-        if (error.name !== "AbortError") notice(error instanceof TypeError ? "서버에 연결하지 못했습니다. 네트워크와 Worker 주소를 확인한 뒤 다시 시도하세요." : error.message, "error");
+        if (error.name !== "AbortError") notice(error instanceof TypeError ? tr("서버에 연결하지 못했습니다. 네트워크와 Worker 주소를 확인한 뒤 다시 시도하세요.") : error.message, "error");
         if (byId("dashboard").hidden) token = "";
       } finally { setBusy(false); }
     }
@@ -293,14 +385,14 @@
       setBusy(true);
       try {
         const data = await api("PUT", { fullName: repo.fullName, ...changes });
-        if (data.fullName !== repo.fullName || typeof data.linked !== "boolean" || typeof data.disabled !== "boolean") throw new Error("변경 응답을 확인할 수 없습니다. 목록을 새로고침해 실제 상태를 확인하세요.");
+        if (data.fullName !== repo.fullName || typeof data.linked !== "boolean" || typeof data.disabled !== "boolean") throw new Error(tr("변경 응답을 확인할 수 없습니다. 목록을 새로고침해 실제 상태를 확인하세요."));
         repo.linked = data.linked;
         repo.disabled = data.disabled;
         render();
-        const message = data.disabled ? "비활성화했습니다. 두 기본 목록에서 숨기며 연동 선택은 유지됩니다." : changes.disabled === false && !data.linked ? "활성화했습니다. 필요하면 저장소를 연동해 주세요." : !data.linked ? "연동을 해제했습니다. GitHub 원본 릴리스는 유지됩니다." : data.syncRequested ? "변경을 저장하고 동기화를 요청했습니다." : "설정을 저장했습니다. 매일 03:00(KST)에 동기화됩니다. 지금 반영하려면 ‘동기화 실행’을 눌러 GitHub에서 실행하세요.";
+        const message = data.disabled ? tr("비활성화했습니다. 두 기본 목록에서 숨기며 연동 선택은 유지됩니다.") : changes.disabled === false && !data.linked ? tr("활성화했습니다. 필요하면 저장소를 연동해 주세요.") : !data.linked ? tr("연동을 해제했습니다. GitHub 원본 릴리스는 유지됩니다.") : data.syncRequested ? tr("변경을 저장하고 동기화를 요청했습니다.") : tr("설정을 저장했습니다. 매일 03:00(KST)에 동기화됩니다. 지금 반영하려면 ‘동기화 실행’을 눌러 GitHub에서 실행하세요.");
         notice(message + (data.message ? " " + data.message : ""), data.disabled || !data.linked || data.syncRequested ? "success" : "warning");
       } catch (error) {
-        if (error.name !== "AbortError") notice(error instanceof TypeError ? "서버에 연결하지 못했습니다. 변경 반영 여부는 목록을 새로고침해 확인하세요." : error.message, "error");
+        if (error.name !== "AbortError") notice(error instanceof TypeError ? tr("서버에 연결하지 못했습니다. 변경 반영 여부는 목록을 새로고침해 확인하세요.") : error.message, "error");
       } finally {
         setBusy(false);
         if (!byId("dashboard").hidden) (Array.from(byId("repo-list").querySelectorAll("button")).find(button => button.dataset.repo === repo.fullName && button.dataset.action === "visibility") || byId("show-disabled")).focus();

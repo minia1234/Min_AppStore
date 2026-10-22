@@ -44,15 +44,15 @@ class StoreRepository(val context: Context) {
 
     suspend fun refresh() = refreshLock.withLock {
         val currentOrigin = origin
-        check(currentOrigin.isNotBlank()) { "먼저 스토어 서버 주소를 설정해 주세요." }
+        check(currentOrigin.isNotBlank()) { context.getString(R.string.origin_required) }
         val cached = dao.catalog()?.takeIf { it.origin == currentOrigin }
         val api = Retrofit.Builder().baseUrl("$currentOrigin/").client(client).build().create(CatalogApi::class.java)
         val response = api.catalog(cached?.etag?.takeIf { it.isNotEmpty() })
         if (response.code() == 304 && cached != null) return@withLock
-        check(response.isSuccessful) { "스토어에 연결할 수 없습니다. HTTP ${response.code()}" }
+        check(response.isSuccessful) { context.getString(R.string.store_http_error, response.code()) }
         response.body().use { body ->
-            check(body != null) { "서버에서 빈 응답을 받았습니다." }
-            check(!body.source().request(4 * 1024 * 1024 + 1L)) { "앱 목록이 허용 크기를 초과했습니다." }
+            check(body != null) { context.getString(R.string.empty_response) }
+            check(!body.source().request(4 * 1024 * 1024 + 1L)) { context.getString(R.string.catalog_too_large) }
             val payload = body.string()
             val catalog = gson.fromJson(payload, Catalog::class.java)
             CatalogRules.validate(catalog)
@@ -62,9 +62,9 @@ class StoreRepository(val context: Context) {
 
     suspend fun queue(app: StoreApp, version: StoreVersion) {
         CatalogRules.validateVersion(version)
-        require(version.minSdk <= Build.VERSION.SDK_INT) { "이 Android 버전에서 설치할 수 없습니다." }
+        require(version.minSdk <= Build.VERSION.SDK_INT) { context.getString(R.string.android_unsupported) }
         val installed = installedVersion(app.packageName)
-        require(installed == null || version.versionCode >= installed) { "이전 버전으로 낮출 수 없습니다." }
+        require(installed == null || version.versionCode >= installed) { context.getString(R.string.cannot_downgrade) }
         val id = "${app.packageName}:${version.versionCode}"
         val old = dao.download(id)
         if (old?.status in listOf("QUEUED", "DOWNLOADING")) { scheduleDownloads(); return }
@@ -98,7 +98,7 @@ class StoreRepository(val context: Context) {
         dao.installing().forEach { entry ->
             when {
                 (installedVersion(entry.packageName) ?: 0) >= entry.versionCode -> dao.status(entry.id, "INSTALLED")
-                entry.packageName !in active -> dao.status(entry.id, "READY", "설치가 완료되지 않았습니다. 다시 설치할 수 있습니다.")
+                entry.packageName !in active -> dao.status(entry.id, "READY", context.getString(R.string.installation_incomplete))
             }
         }
     }

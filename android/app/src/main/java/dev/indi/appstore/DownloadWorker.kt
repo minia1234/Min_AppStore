@@ -32,12 +32,12 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
                     repo.dao.ready(entry.id, file.absolutePath)
                     continue
                 }
-                check(directory.usableSpace > version.size + 32L * 1024 * 1024) { "APK를 저장할 공간이 부족합니다." }
+                check(directory.usableSpace > version.size + 32L * 1024 * 1024) { applicationContext.getString(R.string.storage_full) }
                 download(entry, version, partial)
                 ApkInstaller.validate(applicationContext, partial, entry.packageName, version)
-                check(repo.dao.download(entry.id)?.status != "CANCELLED") { "다운로드가 취소되었습니다." }
-                if (file.exists()) check(file.delete()) { "기존 다운로드 파일을 교체할 수 없습니다." }
-                check(partial.renameTo(file)) { "다운로드 파일을 저장할 수 없습니다." }
+                check(repo.dao.download(entry.id)?.status != "CANCELLED") { applicationContext.getString(R.string.download_cancelled) }
+                if (file.exists()) check(file.delete()) { applicationContext.getString(R.string.replace_download_failed) }
+                check(partial.renameTo(file)) { applicationContext.getString(R.string.save_download_failed) }
                 if (repo.dao.ready(entry.id, file.absolutePath) == 0) file.delete()
             } catch (cancelled: CancellationException) {
                 partial.delete()
@@ -45,7 +45,7 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
             } catch (failure: Exception) {
                 partial.delete()
                 if (repo.dao.download(entry.id)?.status != "CANCELLED") {
-                    repo.dao.status(entry.id, "FAILED", failure.message ?: "다운로드 실패. 다시 시도해 주세요.")
+                    repo.dao.status(entry.id, "FAILED", failure.storeMessage(applicationContext, R.string.download_failed))
                 }
             }
         }
@@ -56,14 +56,14 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
         var lastError: Exception? = null
         for (url in listOf(version.downloadUrl, version.githubUrl).distinct()) {
             currentCoroutineContext().ensureActive()
-            if (repo.dao.download(entry.id)?.status == "CANCELLED") throw IOException("다운로드가 취소되었습니다.")
+            if (repo.dao.download(entry.id)?.status == "CANCELLED") throw IOException(applicationContext.getString(R.string.download_cancelled))
             try {
                 val call = repo.client.newCall(Request.Builder().url(url).build())
                 call.execute().use { response ->
-                    check(response.isSuccessful) { "다운로드 서버 오류: HTTP ${response.code}" }
-                    check(response.request.url.isHttps) { "HTTPS 연결이 아닙니다." }
-                    val body = response.body ?: throw IOException("다운로드 파일이 없습니다.")
-                    if (body.contentLength() >= 0) check(body.contentLength() == version.size) { "APK 크기가 일치하지 않습니다." }
+                    check(response.isSuccessful) { applicationContext.getString(R.string.download_http_error, response.code) }
+                    check(response.request.url.isHttps) { applicationContext.getString(R.string.connection_not_https) }
+                    val body = response.body ?: throw IOException(applicationContext.getString(R.string.download_missing))
+                    if (body.contentLength() >= 0) check(body.contentLength() == version.size) { applicationContext.getString(R.string.size_mismatch) }
                     var count = 0L
                     var lastProgress = 0L
                     body.byteStream().use { input -> target.outputStream().use { output ->
@@ -73,22 +73,22 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
                             val read = input.read(buffer)
                             if (read < 0) break
                             count += read
-                            check(count <= version.size) { "APK 크기가 등록된 크기를 초과했습니다." }
+                            check(count <= version.size) { applicationContext.getString(R.string.size_exceeded) }
                             output.write(buffer, 0, read)
                             val now = System.currentTimeMillis()
                             if (now - lastProgress >= 250) {
-                                check(repo.dao.download(entry.id)?.status != "CANCELLED") { "다운로드가 취소되었습니다." }
+                                check(repo.dao.download(entry.id)?.status != "CANCELLED") { applicationContext.getString(R.string.download_cancelled) }
                                 repo.dao.progress(entry.id, count)
                                 lastProgress = now
                             }
                         }
                     } }
-                    check(target.inputStream().use { StoreRules.verifyBytes(it, version.size, version.sha256) }) { "SHA-256 검증 실패. 파일을 설치하지 않습니다." }
+                    check(target.inputStream().use { StoreRules.verifyBytes(it, version.size, version.sha256) }) { applicationContext.getString(R.string.sha256_failed) }
                     return
                 }
             } catch (cancelled: CancellationException) { throw cancelled
             } catch (failure: Exception) { lastError = failure; target.delete() }
         }
-        throw lastError ?: IOException("다운로드할 수 없습니다.")
+        throw lastError ?: IOException(applicationContext.getString(R.string.download_unavailable))
     }
 }

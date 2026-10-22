@@ -8,7 +8,7 @@
     <application android:name=".StoreApplication" android:allowBackup="false"
         android:label="MinAppStore" android:theme="@style/Theme.IndiStore"
         android:icon="@drawable/ic_store" android:usesCleartextTraffic="false"
-        android:supportsRtl="true">
+        android:supportsRtl="true" android:localeConfig="@xml/locales_config">
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

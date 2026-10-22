@@ -28,7 +28,7 @@ class InstallResultActivity : ComponentActivity() {
         }
         lifecycleScope.launch {
             storeRepository.dao.status(id, if (status == PackageInstaller.STATUS_SUCCESS) "INSTALLED" else "READY",
-                if (status == PackageInstaller.STATUS_SUCCESS) "" else "설치가 취소되었거나 실패했습니다. 다시 시도할 수 있습니다.")
+                if (status == PackageInstaller.STATUS_SUCCESS) "" else this@InstallResultActivity.getString(R.string.installation_failed))
             finish()
         }
     }

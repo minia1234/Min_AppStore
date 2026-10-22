@@ -34,7 +34,7 @@ class UpdateWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                     Intent(applicationContext, MainActivity::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
                 NotificationManagerCompat.from(applicationContext).notify(1,
                     NotificationCompat.Builder(applicationContext, "updates").setSmallIcon(R.drawable.ic_store)
-                        .setContentTitle("${updates.size}개 앱의 업데이트가 있습니다")
+                        .setContentTitle(applicationContext.resources.getQuantityString(R.plurals.update_notification, updates.size, updates.size))
                         .setContentText(updates.take(3).joinToString { it.name })
                         .setContentIntent(intent).setAutoCancel(true).setOnlyAlertOnce(true).build())
             }

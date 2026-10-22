@@ -1,3 +1,4 @@
+import {adminMessage} from './admin-language';
 import {validateCandidate} from './sync-validation';
 export interface AdminEnv {
   STORE:R2Bucket;
@@ -111,7 +112,7 @@ export async function adminPagePolicy(html:string):Promise<string> {
   }));
   return `default-src 'none'; script-src ${hashes[0]}; style-src ${hashes[1]}; connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'`;
 }
-export async function handleAdmin(request:Request,env:AdminEnv):Promise<Response> {
+async function handleAdminRequest(request:Request,env:AdminEnv):Promise<Response> {
   const path=new URL(request.url).pathname;
   if(path==='/admin' || path==='/admin/') {
     if(request.method!=='GET')return json({message:'GET 요청만 지원합니다.'},405);
@@ -222,4 +223,13 @@ export async function handleAdmin(request:Request,env:AdminEnv):Promise<Response
     if(!(error instanceof AdminError))console.error('Admin operation failed',error instanceof Error?error.message:'Unknown error');
     return json({message:error instanceof AdminError?error.message:'관리자 작업을 완료하지 못했습니다. 저장 상태와 동기화 잠금을 확인해 주세요.'},error instanceof AdminError?error.status:503);
   }
+}
+
+export async function handleAdmin(request:Request,env:AdminEnv):Promise<Response> {
+  const response=await handleAdminRequest(request,env);
+  const language=request.headers.get('Accept-Language')?.split(',')[0] || 'ko';
+  if(language.toLowerCase().startsWith('ko') || !response.headers.get('Content-Type')?.includes('application/json'))return response;
+  const body:any=await response.json();
+  if(typeof body.message==='string')body.message=adminMessage(body.message,language);
+  return Response.json(body,{status:response.status,headers:response.headers});
 }
