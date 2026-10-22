@@ -32,6 +32,18 @@ test('admin requires bearer authentication and returns no-store responses',async
  const env=setup();const response=await handleAdmin(req('GET',undefined,'wrong'),env);
  assert.equal(response.status,401);assert.equal(response.headers.get('cache-control'),'no-store');assert.equal(env.STORE.operations.length,0);
 });
+test('cached inventory lists and links repositories without fetching a rate-limited GitHub API',async()=>{
+ const env=setup();env.STORE.objects.set('repositories-cache.json',JSON.stringify({updatedAt:'2026-01-01T00:00:00Z',repositories:[repository]}));
+ const original=globalThis.fetch;let calls=0;globalThis.fetch=async()=>{calls++;return new Response('rate limit',{status:403});};
+ try {
+  const listed=await handleAdmin(req(),env);assert.equal(listed.status,200);const body:any=await listed.json();assert.equal(body.repositories[0].fullName,repository.full_name);assert.equal(body.inventoryStale,true);assert.equal(body.inventoryUpdatedAt,'2026-01-01T00:00:00Z');
+  const linked=await handleAdmin(req('PUT',{fullName:repository.full_name,linked:true}),env);assert.equal(linked.status,200);assert.equal(calls,0);
+ }finally{globalThis.fetch=original;}
+});
+test('malformed cached owner is never trusted for repository listing',async()=>{
+ const env=setup();env.STORE.objects.set('repositories-cache.json',JSON.stringify({updatedAt:new Date().toISOString(),repositories:[{...repository,owner:{login:'outsider'}}]}));
+ await withGitHub(async()=>{assert.equal((await handleAdmin(req(),env)).status,200);},url=>url.includes('/users/minia1234/')?[repository]:[]);
+});
 test('admin lists only allowlisted public owner repositories with default unlinked state',async()=>{
  await withGitHub(async()=>{const response=await handleAdmin(req(),setup());assert.equal(response.status,200);const body:any=await response.json();assert.deepEqual(body.owners,owners);assert.equal(body.repositories.length,1);assert.equal(body.repositories[0].fullName,'minia1234/app');assert.equal(body.repositories[0].linked,false);},url=>url.includes('/users/minia1234/')?[repository,{...repository,full_name:'minia1234/private',private:true}]:[]);
 });

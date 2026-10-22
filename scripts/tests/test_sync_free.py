@@ -1,7 +1,7 @@
 import json
 import unittest
 from unittest.mock import patch
-from sync_free import build_catalog
+from sync_free import build_catalog, collect_inventory
 from test_sync import FakeGitHub
 import test_sync as fixtures
 
@@ -39,6 +39,16 @@ class FreeSyncTests(unittest.TestCase):
     def test_unlinked_apps_are_excluded(self):
         self.snapshot['registry']['linked']=[]
         self.assertEqual(build_catalog(self.snapshot,FakeGitHub(self.manifest,self.asset),'https://minappstore.test')['apps'],[])
+
+    def test_inventory_keeps_only_public_allowed_owner_records(self):
+        class Source:
+            def json(self,path,**options):
+                owner='minia1234' if '/minia1234/' in path else 'AIProject-k'
+                record={'full_name':owner+'/app','name':'app','owner':{'login':owner},'private':False,'description':'test','default_branch':'main'}
+                return [record,{**record,'full_name':owner+'/private','private':True},{**record,'full_name':'outsider/app','owner':{'login':'outsider'}}]
+        inventory=collect_inventory(Source())
+        self.assertEqual([repo['full_name'] for repo in inventory],['minia1234/app','AIProject-k/app'])
+        self.assertTrue(all(repo['private'] is False for repo in inventory))
 
 
 if __name__=='__main__': unittest.main()

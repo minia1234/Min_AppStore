@@ -1,5 +1,5 @@
 interface StoredJson {body:string;etag:string}
-const KEYS=new Set(['catalog.json','repositories.json','sync-lock.json','indi-store-bucket.json']);
+const KEYS=new Set(['catalog.json','repositories.json','repositories-cache.json','sync-lock.json','indi-store-bucket.json']);
 export function createMetadataStore(storage:DurableObjectStorage):R2Bucket {
   const read=async(key:string)=>{
     if(!KEYS.has(key))return null;

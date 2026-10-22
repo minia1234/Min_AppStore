@@ -11,6 +11,7 @@ export interface AdminEnv {
 const OWNERS=['minia1234','AIProject-k'];
 interface Registry {schemaVersion:1;updatedAt:string;linked:string[];disabled?:string[]}
 interface GitHubRepository {full_name:string;name:string;owner:{login:string};description:string|null;html_url:string;private:boolean;archived:boolean;default_branch:string}
+interface RepositoryInventory {updatedAt:string;repositories:GitHubRepository[]}
 class AdminError extends Error {constructor(public status:number,message:string){super(message);}}
 const json=(body:unknown,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 function allowedOwners(env:AdminEnv) {
@@ -20,6 +21,31 @@ function allowedOwners(env:AdminEnv) {
 }
 function allowedRepository(fullName:unknown,owners:string[]):fullName is string {
   return typeof fullName==='string' && /^[A-Za-z0-9-]+\/[A-Za-z0-9_.-]+$/.test(fullName) && owners.some(owner=>fullName.split('/')[0].toLowerCase()===owner.toLowerCase());
+}
+function validateInventory(value:unknown,owners:string[]):GitHubRepository[] {
+  if(!Array.isArray(value) || value.length>2000)throw new AdminError(400,'저장소 목록 크기 제한을 확인해 주세요.');
+  const seen=new Set<string>();
+  return value.map(repo=>{
+    if(!repo || !allowedRepository(repo.full_name,owners) || repo.full_name.length>200 || repo.private!==false || typeof repo.archived!=='boolean' || typeof repo.name!=='string' || repo.name!==repo.full_name.split('/')[1] || repo.name.length>100 || typeof repo.owner?.login!=='string' || repo.owner.login.toLowerCase()!==repo.full_name.split('/')[0].toLowerCase() || (repo.description!==null && (typeof repo.description!=='string' || repo.description.length>2000)) || typeof repo.default_branch!=='string' || !repo.default_branch || repo.default_branch.length>255 || /[\x00-\x1f\x7f]/.test(repo.default_branch) || repo.html_url!==`https://github.com/${repo.full_name}` || seen.has(repo.full_name.toLowerCase()))throw new AdminError(400,'허용 계정의 공개 저장소 목록만 사용할 수 있습니다.');
+    seen.add(repo.full_name.toLowerCase());
+    return {full_name:repo.full_name,name:repo.name,owner:{login:repo.owner.login},description:repo.description,html_url:repo.html_url,private:false,archived:repo.archived,default_branch:repo.default_branch};
+  });
+}
+async function readInventory(store:R2Bucket,owners:string[]):Promise<RepositoryInventory|null> {
+  try {
+    const cached=(await readJson<RepositoryInventory>(store,'repositories-cache.json')).value;
+    if(!cached)return null;
+    if(typeof cached.updatedAt!=='string' || !Number.isFinite(Date.parse(cached.updatedAt)))throw new Error('Invalid inventory timestamp');
+    return {updatedAt:cached.updatedAt,repositories:validateInventory(cached.repositories,owners)};
+  }catch{console.warn('Repository inventory cache unavailable or invalid');return null;}
+}
+async function cacheInventory(store:R2Bucket,inventory:RepositoryInventory):Promise<void> {
+  try {
+    const body=JSON.stringify(inventory);
+    if(new TextEncoder().encode(body).length>2_000_000)throw new Error('Inventory too large');
+    const result=await store.put('repositories-cache.json',body,{httpMetadata:{contentType:'application/json'}});
+    if(!result)throw new Error('Inventory cache write rejected');
+  }catch{console.warn('Repository inventory cache update failed; catalog and links remain valid');}
 }
 async function authorized(request:Request,expected:string) {
   const header=request.headers.get('Authorization') || '';
@@ -105,6 +131,7 @@ export async function handleAdmin(request:Request,env:AdminEnv):Promise<Response
       if(request.method!=='PUT')return json({message:'GET/PUT 요청만 지원합니다.'},405);
       const input=await requestBody(request,2_000_000);
       if(!input || !('catalog' in input) || !('expectedCatalogEtag' in input) || !('expectedRegistryEtag' in input))throw new AdminError(400,'동기화 스냅샷이 필요합니다.');
+      const inventory=input.repositoryInventory===undefined?null:validateInventory(input.repositoryInventory,owners);
       const acquired=await env.STORE.put('sync-lock.json',JSON.stringify({id:crypto.randomUUID(),startedAt:new Date().toISOString(),action:'publishCatalog'}),{onlyIf:new Headers({'If-None-Match':'*'})});
       if(!acquired)return json({message:'다른 작업이 진행 중입니다.',code:'BUSY'},409);
       let attemptedWrite=false;
@@ -114,6 +141,7 @@ export async function handleAdmin(request:Request,env:AdminEnv):Promise<Response
         try{validateCandidate(input.catalog,catalog.value,current.value,new URL(request.url).origin);}catch{throw new AdminError(400,'연동 상태 또는 앱 서명·메타데이터 검증에 실패했습니다.');}
         attemptedWrite=true;
         const updated=await writeJson(env.STORE,'catalog.json',input.catalog,catalog.etag);
+        if(inventory)await cacheInventory(env.STORE,{updatedAt:new Date().toISOString(),repositories:inventory});
         await env.STORE.delete('sync-lock.json');
         return json({published:true,catalogEtag:updated?.httpEtag,updatedAt:input.catalog.updatedAt});
       } catch(error) {
@@ -123,6 +151,8 @@ export async function handleAdmin(request:Request,env:AdminEnv):Promise<Response
     }
     if(request.method==='GET') {
       const current=await registry(env.STORE,owners);
+      let inventory=await readInventory(env.STORE,owners);
+      if(!inventory) {
       const repositories:GitHubRepository[]=[];
       for(const owner of owners) {
         for(let page=1;page<=11;page++) {
@@ -133,7 +163,10 @@ export async function handleAdmin(request:Request,env:AdminEnv):Promise<Response
         }
       }
       const seen=new Set<string>();
-      return json({owners,repositories:repositories.filter(repo=>!seen.has(repo.full_name.toLowerCase()) && !!seen.add(repo.full_name.toLowerCase())).map(repo=>({fullName:repo.full_name,name:repo.name,owner:repo.owner.login,description:repo.description || '',url:repo.html_url,linked:current.value.linked.some(name=>name.toLowerCase()===repo.full_name.toLowerCase()),disabled:(current.value.disabled || []).some(name=>name.toLowerCase()===repo.full_name.toLowerCase()),archived:repo.archived,defaultBranch:repo.default_branch})),updatedAt:new Date().toISOString()});
+      inventory={updatedAt:new Date().toISOString(),repositories:validateInventory(repositories.filter(repo=>!seen.has(repo.full_name.toLowerCase()) && !!seen.add(repo.full_name.toLowerCase())),owners)};
+      await cacheInventory(env.STORE,inventory);
+      }
+      return json({owners,repositories:inventory.repositories.map(repo=>({fullName:repo.full_name,name:repo.name,owner:repo.owner.login,description:repo.description || '',url:repo.html_url,linked:current.value.linked.some(name=>name.toLowerCase()===repo.full_name.toLowerCase()),disabled:(current.value.disabled || []).some(name=>name.toLowerCase()===repo.full_name.toLowerCase()),archived:repo.archived,defaultBranch:repo.default_branch})),updatedAt:new Date().toISOString(),inventoryUpdatedAt:inventory.updatedAt,inventoryStale:Date.now()-Date.parse(inventory.updatedAt)>24*60*60*1000});
     }
     if(request.method!=='PUT')return json({message:'GET/PUT 요청만 지원합니다.'},405);
     const input=await requestBody(request);
@@ -152,7 +185,8 @@ export async function handleAdmin(request:Request,env:AdminEnv):Promise<Response
       linked=typeof input.linked==='boolean'?input.linked:current.value.linked.some(name=>name.toLowerCase()===fullName.toLowerCase());
       disabled=typeof input.disabled==='boolean'?input.disabled:(current.value.disabled || []).some(name=>name.toLowerCase()===fullName.toLowerCase());
       if(input.linked===true || input.disabled===false) {
-        const repo=await github<GitHubRepository>(env,`/repos/${fullName}`);
+        const cached=await readInventory(env.STORE,owners);
+        const repo=cached?.repositories.find(repo=>repo.full_name.toLowerCase()===fullName.toLowerCase()) || await github<GitHubRepository>(env,`/repos/${fullName}`);
         if(repo.private || repo.full_name.toLowerCase()!==fullName.toLowerCase() || !allowedRepository(repo.full_name,owners) || !owners.some(owner=>owner.toLowerCase()===repo.owner.login.toLowerCase()))throw new AdminError(400,'허용 계정의 공개 저장소만 연결할 수 있습니다.');
         fullName=repo.full_name;
       }
