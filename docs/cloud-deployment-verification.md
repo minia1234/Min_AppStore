@@ -17,7 +17,7 @@
 | 관리자 HTML | HTTPS 200, MinAppStore 표시명, script/style CSP 해시 |
 | 관리자 인증 | 인증된 저장소 조회 200; 두 계정의 공개 저장소 목록 |
 | 카탈로그 게시 | 실제 공개 APK를 SDK로 검사한 뒤 운영 동기화 API의 published:true 응답 |
-| 공개 무료 Actions | [실행 39663566452](https://github.com/AIProject-k/ApplicationTest/actions/runs/39663566452) success; APK검사 도구 설치와 운영 동기화 스크립트 실행 성공 |
+| 공개 무료 Actions | [실행 39756281216](https://github.com/AIProject-k/ApplicationTest/actions/runs/39756281216) success; APK검사 도구와 운영 카탈로그·저장소 목록 캐시 동기화 성공 |
 | 기본 자동 실행 | 매일03:00KST·ApplicationTest 릴리스 게시·수동 실행 |
 | Pixel4 | 기존 데이터 삭제 없이 MinAppStore0.2.0/code2 설치, 운영 origin으로 변경, USB reverse 제거 후 MinAppStore 앱 목록과 설치된 테스트 앱 ‘열기’ 표시 확인 |
 
@@ -25,7 +25,11 @@
 
 ## 로컬 검증
 
-Node31개, Python32개, Android단위7개 성공. TypeScript 검사·Wrangler 배포 dry-run 및 실제 배포 성공. Android assembleDebug와 lintDebug 성공(오류0개, 기존 경고18개). APK 표시명 MinAppStore, 패키지 dev.indi.appstore, 버전0.2.0/code2. 기존 Pixel4 설치와 같은 인증서를 유지했다.
+Node36개, Python33개, Android단위8개 성공. TypeScript 검사와 실제 배포 성공. Android assembleDebug와 lintDebug 성공(오류0개). APK 표시명 MinAppStore, 패키지 dev.indi.appstore, 버전0.2.0/code2. 기존 Pixel4 설치와 같은 인증서를 유지했다.
+
+GitHub 인증 없는 조회의 403 제한을 피하기 위해 공개 동기화 실행기가 허용 계정의 공개 저장소 목록을 서버에 캐시한다. 관리자 조회와 기존 캐시 항목의 연결·활성화는 이 목록을 사용하고, 실제 카탈로그 게시 시 공개 여부·APK 검증을 다시 수행한다. 캐시는 링크·비활성·서명 정보를 대체하지 않는다. 최신 실행 후 인증 조회200, 비활성 앱의 카탈로그 숨김과 다운로드404, 활성화 후 복원을 운영 서버에서 확인했다.
+
+블루 라이트·민트 다크 디자인의 변경 및 실기기/웹 검증 범위는 [디자인 기록](design-blue-mint.md)에 구분했다.
 
 ## 경계
 

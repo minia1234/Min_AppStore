@@ -2,6 +2,7 @@
     <style name="Theme.IndiStore" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:fontFamily">sans</item>
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:colorAccent">#246C51</item>
+        <item name="android:colorAccent">#0959E8</item>
+        <item name="android:windowBackground">#F6F9FF</item>
     </style>
 </resources>

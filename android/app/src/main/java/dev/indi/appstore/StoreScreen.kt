@@ -4,7 +4,8 @@ import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,7 +23,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -33,14 +33,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import java.util.Locale
-
-private val Forest = Color(0xFF205C46)
-private val Cream = Color(0xFFF8F9F3)
-private val StoreColors = lightColorScheme(
-    primary = Forest, onPrimary = Color.White, primaryContainer = Color(0xFFDCECDF),
-    onPrimaryContainer = Color(0xFF153E2E), background = Cream, surface = Cream,
-    surfaceVariant = Color(0xFFE9EDE4), onSurfaceVariant = Color(0xFF59645A)
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,18 +64,18 @@ fun StoreScreen(
         installed != null && app.latest?.let { StoreRules.isUpdate(installed, it.versionCode) } == true
     }
     BackHandler(enabled = selected != null) { selected = null }
-    MaterialTheme(colorScheme = StoreColors) {
+    MaterialTheme(colorScheme = if (isSystemInDarkTheme()) StoreDarkColors else StoreLightColors) {
         Scaffold(
-            containerColor = Cream,
+            containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 TopAppBar(title = { Text(if (detail != null) "앱 정보" else "MinAppStore", fontWeight = FontWeight.Bold) },
                     navigationIcon = { if (detail != null) IconButton(onClick = { selected = null }) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "뒤로") } },
                     actions = { if (state.origin.isNotBlank()) IconButton(onClick = onRefresh, enabled = !state.refreshing) { Icon(Icons.Outlined.Refresh, "목록 새로고침") } },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Cream))
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background))
             },
             bottomBar = {
-                NavigationBar(containerColor = Color.White) {
-                    listOf("둘러보기" to Icons.Outlined.Explore, "내 앱" to Icons.Outlined.Apps,
+                NavigationBar(containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 0.dp) {
+                    listOf("스토어" to Icons.Outlined.Storefront, "내 앱" to Icons.Outlined.Apps,
                         "다운로드" to Icons.Outlined.Download, "설정" to Icons.Outlined.Settings).forEachIndexed { index, item ->
                         NavigationBarItem(selected = tab == index, onClick = { tab = index; selected = null },
                             icon = { Icon(item.second, contentDescription = item.first) }, label = { Text(item.first) })
@@ -125,7 +117,7 @@ fun StoreScreen(
                                 Text("개발자 · ${detail.author}")
                                 Text("분류 · ${detail.category}")
                                 Text("GitHub 릴리스 다운로드 · ${detail.downloadCount}회")
-                                if (detail.tags.isNotEmpty()) Text(detail.tags.joinToString("  ") { "#$it" }, color = Forest)
+                                if (detail.tags.isNotEmpty()) Text(detail.tags.joinToString("  ") { "#$it" }, color = MaterialTheme.colorScheme.primary)
                                 if (detail.repository.isNotBlank()) TextButton(onClick = { uriHandler.openUri("https://github.com/${detail.repository}") }) {
                                     Icon(Icons.Outlined.OpenInNew, null, Modifier.size(16.dp)); Spacer(Modifier.width(6.dp)); Text(detail.repository)
                                 }
@@ -137,12 +129,14 @@ fun StoreScreen(
                         }
                     }
                     tab == 0 -> {
-                        item { Hero("좋은 앱, 가까이.", "개발자의 작은 아이디어를\n당신의 일상에 더해보세요.") }
+                        item { Text("나의 앱을 한곳에", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyLarge) }
                         item {
                             OutlinedTextField(value = query, onValueChange = { query = it }, modifier = Modifier.fillMaxWidth(),
                                 placeholder = { Text("앱, 설명, 태그 검색") }, leadingIcon = { Icon(Icons.Outlined.Search, null) },
                                 trailingIcon = { if (query.isNotEmpty()) IconButton(onClick = { query = "" }) { Icon(Icons.Outlined.Close, "검색어 지우기") } },
-                                singleLine = true, shape = RoundedCornerShape(18.dp))
+                                singleLine = true, shape = RoundedCornerShape(24.dp),
+                                colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant))
                         }
                         item {
                             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -151,14 +145,31 @@ fun StoreScreen(
                                 }
                             }
                         }
+                        updates.firstOrNull()?.let { app -> item {
+                            Surface(color = MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(20.dp)) {
+                                Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    Text("새로운 버전이 있어요", color = MaterialTheme.colorScheme.onPrimaryContainer, style = MaterialTheme.typography.labelLarge)
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        AppIcon(app.name, app.iconUrl, 48)
+                                        Column(Modifier.weight(1f)) {
+                                            Text(app.name, color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                            Text("v${app.latest?.versionName}", color = MaterialTheme.colorScheme.onPrimaryContainer, style = MaterialTheme.typography.bodySmall)
+                                        }
+                                        AppAction(app, state.installed[app.packageName], download, onOpen)
+                                    }
+                                }
+                            }
+                        } }
                         item {
-                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                Text("앱 둘러보기", Modifier.weight(1f), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text("앱 둘러보기", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                Row(Modifier.horizontalScroll(rememberScrollState())) {
                                 listOf("최신", "인기", "최근 업데이트").forEach { value ->
                                     TextButton(onClick = { sort = value }, contentPadding = PaddingValues(horizontal = 6.dp)) {
-                                        Text(value, color = if (sort == value) Forest else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        Text(value, color = if (sort == value) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                             fontWeight = if (sort == value) FontWeight.Bold else FontWeight.Normal)
                                     }
+                                }
                                 }
                             }
                         }
@@ -225,11 +236,10 @@ fun StoreScreen(
 
 @Composable
 private fun Hero(title: String, subtitle: String) {
-    Surface(color = Forest, shape = RoundedCornerShape(28.dp), modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("INDEPENDENT IDEAS, EVERYDAY APPS", color = Color(0xFFC3D9B4), style = MaterialTheme.typography.labelSmall)
-            Text(title, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, color = Color.White)
-            Text(subtitle, color = Color(0xFFE0EBDD), style = MaterialTheme.typography.bodyMedium)
+    Surface(color = MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(22.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+            Text(subtitle, color = MaterialTheme.colorScheme.onPrimaryContainer, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
@@ -244,7 +254,7 @@ private fun SectionTitle(title: String, subtitle: String) {
 
 @Composable
 private fun InfoCard(content: @Composable ColumnScope.() -> Unit) {
-    Card(colors = CardDefaults.cardColors(containerColor = Color.White), modifier = Modifier.fillMaxWidth()) {
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp), content = content)
     }
 }
@@ -252,7 +262,7 @@ private fun InfoCard(content: @Composable ColumnScope.() -> Unit) {
 @Composable
 private fun AppIcon(name: String, url: String, size: Int = 56) {
     Box(Modifier.size(size.dp).clip(RoundedCornerShape((size / 4).dp)).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
-        Text(name.take(1), style = MaterialTheme.typography.headlineSmall, color = Forest, fontWeight = FontWeight.Bold)
+        Text(name.take(1), style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
         if (url.isNotBlank()) AsyncImage(model = url, contentDescription = "$name 아이콘", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
     }
 }
@@ -270,18 +280,17 @@ private fun AppHeading(app: StoreApp) {
 
 @Composable
 private fun AppRow(app: StoreApp, installed: Long?, onDetails: () -> Unit, onDownload: (StoreApp, StoreVersion) -> Unit, onOpen: (String) -> Unit) {
-    Card(colors = CardDefaults.cardColors(containerColor = Color.White)) {
-        Column(Modifier.fillMaxWidth().clickable(onClick = onDetails).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Card(onClick = onDetails, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(20.dp), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 AppIcon(app.name, app.iconUrl)
-                Column(Modifier.weight(1f)) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(app.name, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(app.summary, maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(listOfNotNull(app.latest?.let { "v${it.versionName}" }, app.category.takeIf { it.isNotBlank() }).joinToString(" · "),
+                        style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                 }
-                Icon(Icons.Outlined.ChevronRight, "${app.name} 상세 보기", tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(app.category, Modifier.weight(1f), style = MaterialTheme.typography.labelMedium, color = Forest)
                 AppAction(app, installed, onDownload, onOpen)
             }
         }
@@ -293,8 +302,8 @@ private fun AppAction(app: StoreApp, installed: Long?, onDownload: (StoreApp, St
     val version = app.latest
     val update = installed != null && version != null && StoreRules.isUpdate(installed, version.versionCode)
     val compatible = version != null && version.minSdk <= Build.VERSION.SDK_INT
-    FilledTonalButton(onClick = { if (installed != null && !update) onOpen(app.packageName) else if (version != null) onDownload(app, version) },
-        enabled = (installed != null && !update) || compatible) {
+    Button(onClick = { if (installed != null && !update) onOpen(app.packageName) else if (version != null) onDownload(app, version) },
+        enabled = (installed != null && !update) || compatible, shape = RoundedCornerShape(12.dp)) {
         Text(when { installed != null && !update -> "열기"; !compatible -> "지원하지 않음"; update -> "업데이트"; else -> "설치" })
     }
 }
@@ -363,7 +372,7 @@ private fun OriginSettings(origin: String, onSave: (String) -> Unit) {
 @Composable
 private fun EmptyMessage(icon: ImageVector, title: String, subtitle: String) {
     Column(Modifier.fillMaxWidth().padding(vertical = 28.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Icon(icon, null, Modifier.size(40.dp), tint = Forest)
+        Icon(icon, null, Modifier.size(40.dp), tint = MaterialTheme.colorScheme.primary)
         Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
     }

@@ -1,0 +1,8 @@
+<resources>
+    <style name="Theme.IndiStore" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:colorAccent">#7DF4D0</item>
+        <item name="android:windowBackground">#101719</item>
+    </style>
+</resources>

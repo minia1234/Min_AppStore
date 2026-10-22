@@ -6,75 +6,80 @@
   <meta name="referrer" content="no-referrer">
   <title>저장소 관리 · MinAppStore</title>
   <style>
-    :root { color-scheme: light; --green:#205c46; --deep:#163d30; --cream:#f7f8f2; --line:#e1e7dc; --muted:#647064; --mint:#e8f0e4; }
+    :root { color-scheme:light; --accent:#0959e8; --accent-hover:#0849bf; --on-accent:#fff; --background:#f6f9ff; --surface:#fff; --text:#14213d; --line:#d8e3f4; --muted:#536580; --soft:#e7f0ff; --on-soft:#123875; --success-bg:#e9f7f0; --success-text:#246345; --error-bg:#fff0ec; --error-text:#963c2c; --warning-bg:#fff4d9; --warning-text:#76591e; }
+    @media(prefers-color-scheme:dark) {
+      :root { color-scheme:dark; --accent:#7df4d0; --accent-hover:#a7f9df; --on-accent:#00382b; --background:#101719; --surface:#192326; --text:#edf4f3; --line:#344746; --muted:#afbfbe; --soft:#173e35; --on-soft:#b5fce4; --success-bg:#173e35; --success-text:#a0e7c2; --error-bg:#462720; --error-text:#ffb4a3; --warning-bg:#3c321b; --warning-text:#f1d18b; }
+    }
     * { box-sizing:border-box; }
     [hidden] { display:none !important; }
-    body { margin:0; background:var(--cream); color:#24352b; font:15px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    body { margin:0; background:var(--background); color:var(--text); font:15px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif; }
     button,input,select { font:inherit; }
     button,a,input,select { -webkit-tap-highlight-color:transparent; }
     button { cursor:pointer; }
     button:disabled { cursor:wait; opacity:.55; }
-    :focus-visible { outline:3px solid #8bac72; outline-offset:4px; }
-    a { color:var(--green); text-underline-offset:4px; }
-    header { background:#fff; border-bottom:1px solid var(--line); }
+    :focus-visible { outline:3px solid var(--accent); outline-offset:4px; }
+    a { color:var(--accent); text-underline-offset:4px; }
+    header { background:var(--surface); border-bottom:1px solid var(--line); }
     .header-inner { max-width:1180px; margin:auto; min-height:88px; padding:18px 32px; display:flex; align-items:center; justify-content:space-between; gap:20px; }
     .brand { display:flex; align-items:center; gap:12px; font-weight:760; font-size:21px; letter-spacing:-.6px; }
-    .mark { display:grid; place-items:center; width:42px; height:42px; border-radius:14px; color:#fff; background:var(--green); font-size:25px; font-family:Georgia,serif; }
+    .mark { display:grid; place-items:center; width:42px; height:42px; border-radius:14px; color:var(--on-accent); background:var(--accent); font-size:25px; font-weight:800; }
     .brand small { font-size:12px; font-weight:500; color:var(--muted); letter-spacing:0; display:block; line-height:1.2; }
     main { max-width:1180px; margin:auto; padding:44px 32px 64px; }
     h1,h2,p { margin:0; }
     h1 { font-size:clamp(27px,4vw,38px); line-height:1.3; font-weight:760; letter-spacing:-1.4px; }
     h2 { font-size:19px; letter-spacing:-.5px; }
-    .eyebrow { font-size:11px; font-weight:750; letter-spacing:2px; color:#a8c29a; margin-bottom:15px; }
+    .eyebrow { font-size:11px; font-weight:750; letter-spacing:2px; color:var(--on-soft); margin-bottom:15px; }
     .muted { color:var(--muted); }
     .small { font-size:13px; }
     .primary,.secondary,.quiet,.repo-button { display:inline-flex; justify-content:center; align-items:center; min-height:42px; padding:9px 18px; border-radius:12px; font-weight:650; border:1px solid transparent; gap:7px; }
-    .primary { background:var(--green); color:#fff; }
-    .primary:hover:not(:disabled) { background:var(--deep); }
-    .secondary { background:#fff; color:var(--green); border-color:var(--line); }
-    .secondary:hover:not(:disabled),.repo-button:hover:not(:disabled) { background:var(--mint); }
+    .primary { background:var(--accent); color:var(--on-accent); }
+    .primary:hover:not(:disabled) { background:var(--accent-hover); }
+    .secondary { background:var(--surface); color:var(--accent); border-color:var(--line); text-decoration:none; }
+    .secondary:hover:not(:disabled),.repo-button:hover:not(:disabled) { background:var(--soft); }
     .quiet { background:none; color:var(--muted); padding:8px; }
-    .login { max-width:960px; margin:28px auto 0; display:grid; grid-template-columns:1.05fr 1fr; border:1px solid var(--line); border-radius:28px; overflow:hidden; background:#fff; }
-    .welcome { background:var(--green); color:white; padding:48px 38px; display:flex; flex-direction:column; justify-content:space-between; gap:64px; }
-    .welcome p { margin-top:20px; color:#dae6d6; }
-    .welcome .footnote { border-top:1px solid #50765f; padding-top:24px; font-size:13px; }
+    .login { max-width:960px; margin:28px auto 0; display:grid; grid-template-columns:1.05fr 1fr; border:1px solid var(--line); border-radius:24px; overflow:hidden; background:var(--surface); }
+    .welcome { background:var(--soft); color:var(--on-soft); padding:48px 38px; display:flex; flex-direction:column; justify-content:space-between; gap:64px; }
+    .welcome p { margin-top:20px; color:var(--on-soft); }
+    .welcome .footnote { border-top:1px solid var(--line); padding-top:24px; font-size:13px; }
     .login-form { padding:48px 38px; align-self:center; }
     .login-form h2 { margin-bottom:10px; }
     label { display:block; font-size:13px; font-weight:650; margin-bottom:7px; }
-    input,select { width:100%; min-height:46px; border:1px solid #cdd7c7; border-radius:12px; color:inherit; background:#fff; padding:10px 13px; }
-    input::placeholder { color:#8a948a; }
+    input,select { width:100%; min-height:46px; border:1px solid var(--line); border-radius:12px; color:inherit; background:var(--surface); padding:10px 13px; accent-color:var(--accent); }
+    input::placeholder { color:var(--muted); }
+    input[type="search"] { background:var(--soft); border-radius:24px; }
     #login-form label { margin-top:28px; }
     #login-form .primary { width:100%; margin-top:22px; }
     .security-note { margin-top:18px; color:var(--muted); font-size:12px; }
-    .error { background:#fff0ec; color:#8e3527; border:1px solid #f0d2c8; }
+    .error { background:var(--error-bg); color:var(--error-text); border:1px solid var(--error-text); }
     .notice { border-radius:14px; padding:14px 18px; margin-bottom:22px; }
-    .notice.success { background:#e7f1e6; color:#275437; border:1px solid #c9dfc6; }
-    .notice.warning { background:#fff4d9; color:#76591e; border:1px solid #ead8a9; }
+    .notice.success { background:var(--success-bg); color:var(--success-text); border:1px solid var(--line); }
+    .notice.warning { background:var(--warning-bg); color:var(--warning-text); border:1px solid var(--line); }
     #login-error { margin:18px 0 0; }
-    .intro { display:flex; justify-content:space-between; align-items:flex-end; gap:24px; margin-bottom:30px; }
+    .intro { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end; gap:16px; margin-bottom:30px; }
+    .intro > div { flex:1 1 350px; }
     .intro p { margin-top:12px; color:var(--muted); }
-    .intro .eyebrow { color:var(--green); }
-    .stats { display:grid; grid-template-columns:repeat(3,1fr); border:1px solid var(--line); border-radius:20px; background:#fff; margin-bottom:32px; }
+    .intro .eyebrow { color:var(--accent); }
+    .stats { display:grid; grid-template-columns:repeat(3,1fr); border:1px solid var(--line); border-radius:20px; background:var(--surface); margin-bottom:32px; }
     .stat { padding:22px 28px; }
     .stat + .stat { border-left:1px solid var(--line); }
-    .stat strong { font-size:30px; line-height:1.2; display:block; letter-spacing:-1px; margin-top:8px; }
+    .stat strong { font-size:30px; line-height:1.2; display:block; letter-spacing:-1px; margin-top:8px; color:var(--accent); }
     .stat span { color:var(--muted); font-size:13px; }
     .toolbar { display:grid; grid-template-columns:1fr 180px 150px; gap:14px; align-items:end; margin-bottom:22px; }
     .list-heading { display:flex; gap:12px; justify-content:space-between; align-items:center; padding:0 2px 15px; }
-    .repo-list { border:1px solid var(--line); border-radius:20px; background:#fff; overflow:hidden; }
+    .repo-list { border:1px solid var(--line); border-radius:20px; background:var(--surface); overflow:hidden; }
     .repo-row { display:grid; grid-template-columns:minmax(0,1fr) 140px 116px; gap:24px; align-items:center; padding:24px 26px; }
     .repo-row + .repo-row { border-top:1px solid var(--line); }
     .repo-title { display:flex; flex-wrap:wrap; align-items:center; gap:9px; }
     .repo-title a { font-size:17px; font-weight:720; text-decoration:none; overflow-wrap:anywhere; }
     .repo-title a:hover { text-decoration:underline; }
     .repo-description { color:var(--muted); margin:7px 0 8px; overflow-wrap:anywhere; }
-    .repo-meta { font-size:12px; color:#7a8479; overflow-wrap:anywhere; }
-    .badge { font-size:11px; border-radius:6px; padding:2px 7px; background:#eff0eb; color:#6a7166; white-space:nowrap; }
+    .repo-meta { font-size:12px; color:var(--muted); overflow-wrap:anywhere; }
+    .badge { font-size:11px; border-radius:6px; padding:2px 7px; background:var(--soft); color:var(--on-soft); white-space:nowrap; }
     .link-status { display:inline-flex; gap:7px; align-items:center; font-size:13px; font-weight:650; color:var(--muted); }
-    .dot { width:7px; height:7px; border-radius:50%; background:#b4bcb0; }
-    .linked { color:var(--green); }
-    .linked .dot { background:#438355; }
-    .repo-button { background:#fff; border-color:#cbd9c5; color:var(--green); width:100%; font-size:13px; padding:8px; }
+    .dot { width:7px; height:7px; border-radius:50%; background:var(--muted); }
+    .linked { color:var(--accent); }
+    .linked .dot { background:var(--accent); }
+    .repo-button { background:var(--surface); border-color:var(--line); color:var(--accent); width:100%; font-size:13px; padding:8px; }
     .repo-actions { display:grid; gap:8px; }
     .visibility-option { display:flex; align-items:center; gap:8px; margin:0 0 16px; color:var(--muted); }
     .visibility-option input { width:18px; min-height:18px; margin:0; }
@@ -84,12 +89,12 @@
     .guide { display:grid; grid-template-columns:1fr 1fr; gap:26px; border-top:1px solid var(--line); margin-top:36px; padding-top:26px; }
     .guide h2 { font-size:14px; margin-bottom:7px; }
     .guide p { color:var(--muted); font-size:13px; }
-    footer { max-width:1180px; margin:auto; padding:0 32px 28px; color:#879080; font-size:12px; }
+    footer { max-width:1180px; margin:auto; padding:0 32px 28px; color:var(--muted); font-size:12px; }
     @media(max-width:760px) {
       .header-inner { min-height:76px; padding:16px 20px; } main { padding:28px 20px 40px; } footer { padding:0 20px 24px; }
       .login { margin-top:0; grid-template-columns:1fr; border-radius:22px; } .welcome { padding:30px 26px; gap:25px; }
       .welcome .footnote { display:none; } .login-form { padding:30px 26px; } .welcome p { margin-top:12px; }
-      .intro { align-items:flex-start; flex-direction:column; gap:18px; } .intro .secondary { align-self:flex-end; }
+      .intro { align-items:flex-start; gap:12px; } .intro > div { flex-basis:100%; } .intro .secondary { flex:1; }
       .stats { margin-bottom:24px; } .stat { padding:18px 14px; } .stat strong { font-size:25px; }
       .toolbar { grid-template-columns:1fr 1fr; gap:12px; } .search-field { grid-column:1/-1; }
       .repo-row { grid-template-columns:minmax(0,1fr) auto; gap:14px; padding:21px 20px; }
@@ -101,12 +106,12 @@
 </head>
 <body>
   <header><div class="header-inner">
-    <div class="brand"><span class="mark" aria-hidden="true">m</span><div>MinAppStore<small>개발자의 작은 아이디어를 한곳에</small></div></div>
+    <div class="brand"><span class="mark" aria-hidden="true">m</span><div>MinAppStore<small>ADMIN · 저장소 관리</small></div></div>
     <button id="logout" class="quiet" type="button" hidden>로그아웃</button>
   </div></header>
   <main>
     <section id="login" class="login" aria-labelledby="login-title">
-      <div class="welcome"><div><div class="eyebrow">YOUR APPS, YOUR COLLECTION</div><h1 id="login-title">좋은 아이디어가<br>앱이 되는 곳.</h1><p>공개 GitHub 저장소를 선택해<br>나만의 스토어와 연결하세요.</p></div><p class="footnote">minia1234 · AIProject-k<br>서버에서 허용한 두 계정의 공개 저장소만 관리합니다.</p></div>
+      <div class="welcome"><div><div class="eyebrow">YOUR APPS, ONE PLACE</div><h1 id="login-title">나의 앱을<br>한곳에.</h1><p>공개 GitHub 저장소를 선택해<br>MinAppStore와 연결하세요.</p></div><p class="footnote">minia1234 · AIProject-k<br>서버에서 허용한 두 계정의 공개 저장소만 관리합니다.</p></div>
       <form id="login-form" class="login-form">
         <h2>스토어 관리에 로그인</h2><p class="muted small">Worker에 설정한 관리자 토큰을 입력하세요.</p>
         <label for="token">관리자 토큰</label><input id="token" name="admin-token" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="관리자 토큰 입력" required>
@@ -116,7 +121,7 @@
       </form>
     </section>
     <section id="dashboard" aria-labelledby="page-title" hidden>
-      <div class="intro"><div><div class="eyebrow">STORE MANAGEMENT</div><h1 id="page-title" tabindex="-1">앱이 시작되는 저장소</h1><p>스토어에 연결할 공개 저장소를 직접 선택하세요.</p></div><a class="secondary" href="https://github.com/AIProject-k/ApplicationTest/actions/workflows/store-sync.yml" target="_blank" rel="noopener noreferrer">동기화 실행</a><button id="refresh" class="secondary" type="button"><span aria-hidden="true">↻</span> 목록 새로고침</button></div>
+      <div class="intro"><div><div class="eyebrow">STORE MANAGEMENT</div><h1 id="page-title" tabindex="-1">저장소 관리</h1><p>스토어에 연결할 공개 저장소를 직접 선택하세요.</p></div><a class="secondary" href="https://github.com/AIProject-k/ApplicationTest/actions/workflows/store-sync.yml" target="_blank" rel="noopener noreferrer">동기화 실행</a><button id="refresh" class="secondary" type="button"><span aria-hidden="true">↻</span> 목록 새로고침</button></div>
       <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
       <div class="stats" aria-label="서버에서 조회한 저장소 현황">
         <div class="stat"><span>전체 공개 저장소</span><strong id="total-count">—</strong></div>
@@ -269,7 +274,7 @@
         const selectedOwner = byId("owner").value;
         byId("owner").replaceChildren(new Option("전체 계정", ""), ...owners.map(owner => new Option(owner, owner)));
         if (owners.includes(selectedOwner)) byId("owner").value = selectedOwner;
-        byId("updated-at").textContent = data.updatedAt ? "서버 갱신 · " + data.updatedAt : "";
+        byId("updated-at").textContent = (data.inventoryUpdatedAt ? "저장소 목록 기준 · " + data.inventoryUpdatedAt : data.updatedAt ? "서버 갱신 · " + data.updatedAt : "") + (data.inventoryStale ? " · 최신 목록은 동기화 실행 후 반영됩니다" : "");
         const firstLogin = byId("dashboard").hidden;
         byId("login").hidden = true;
         byId("dashboard").hidden = false;
