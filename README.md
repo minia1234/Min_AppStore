@@ -5,6 +5,7 @@
 - [운영 API](https://minappstore-api.eum-user.workers.dev/api/catalog)
 - [관리자 화면](https://minappstore-api.eum-user.workers.dev/admin)
 - [무료 동기화 실행](https://github.com/AIProject-k/ApplicationTest/actions/workflows/store-sync.yml)
+- [다른 Android 앱 등록·업데이트 가이드](skills/minappstore-publish/references/publishing-guide.md) · [재사용 스킬](skills/minappstore-publish/SKILL.md)
 
 ## 무료 운영 구조
 

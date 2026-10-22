@@ -1,0 +1,10 @@
+{
+  "name": "나의 앱",
+  "summary": "앱의 주요 기능을 짧게 소개합니다.",
+  "description": "앱의 기능과 사용 방법을 설명합니다.",
+  "category": "도구",
+  "author": "AIProject-k",
+  "tags": ["도구"],
+  "iconUrl": "",
+  "screenshots": []
+}

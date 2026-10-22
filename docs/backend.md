@@ -9,7 +9,8 @@
 | `minappstore-api` Worker | HTTPS API와 관리자 HTML |
 | SQLite Durable Object `MinAppStoreState` | 카탈로그·연동 목록·비활성 상태·게시 잠금 |
 | 공개 GitHub Releases | APK 원본 및 버전 기록 |
-| 비공개 GitHub `minia1234/Min_AppStore` | 소스·검증·일일/수동 동기화 |
+| 비공개 GitHub `minia1234/Min_AppStore` | 소스·검증·운영 문서 |
+| 공개 GitHub `AIProject-k/ApplicationTest` | 무료 일일/수동 카탈로그 동기화 실행기 |
 
 URL: `https://minappstore-api.eum-user.workers.dev`. 관리자 `/admin`, 공개 목록 `/api/catalog`, 앱 릴리스 `/api/apps/{package}/releases`, 다운로드 `/downloads/{package}/{versionCode}.apk`입니다. 다운로드는 검증된 공개 GitHub asset으로 redirect됩니다. APK·이미지를 Cloudflare에 저장하지 않습니다.
 
@@ -27,6 +28,8 @@ Workers Free의 SQLite-backed Durable Objects를 사용합니다. [공식 가격
 관리자 변경과 동기화 게시에는 단일 writer 잠금과 조건부 JSON 쓰기를 사용합니다. 오래된 카탈로그/연동 ETag로 게시하면 409를 반환합니다. 읽기만 한 스냅샷으로 최신 사용자 설정을 덮어쓸 수 없습니다. 게시 결과가 불확실한 부분 실패는 복구 잠금을 유지합니다.
 
 ## 앱 등록
+
+다른 프로젝트에서 사용하는 전체 절차는 [앱 등록·업데이트 가이드](../skills/minappstore-publish/references/publishing-guide.md), Codex 재사용 절차는 [minappstore-publish 스킬](../skills/minappstore-publish/SKILL.md)에 있습니다.
 
 공개 릴리스에 **실제 서명 APK와 `store-manifest.json`**을 함께 올립니다. `scripts/store_manifest.py`가 `aapt`/`apksigner`로 실제 패키지·버전·최소 SDK·서명을 읽고 파일 크기·SHA-256을 생성합니다. 수작업으로 바이너리 정보를 꾸며 넣지 않습니다.
 

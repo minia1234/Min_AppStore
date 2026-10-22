@@ -1,0 +1,4 @@
+interface:
+  display_name: "MinAppStore 앱 등록"
+  short_description: "Android 앱의 APK와 검증 정보를 준비하고 MinAppStore에 연동합니다"
+  default_prompt: "$minappstore-publish 이 프로젝트의 Android 앱을 확인하고 MinAppStore 등록과 업데이트 배포를 준비해줘."
