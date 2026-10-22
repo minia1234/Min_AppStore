@@ -1,5 +1,7 @@
 # 다른 Android 앱을 MinAppStore에 연동하기
 
+[English guide](publishing-guide.en.md) · 스킬은 요청한 언어로 안내합니다. 영문 metadata 예시는 `../assets/store-metadata.en.json`에 있습니다.
+
 ## 무엇을 올리면 되나요?
 
 **공개 GitHub Release에 서명된 APK와 `store-manifest.json`을 함께 올리고, 관리자에서 해당 저장소를 연동**하면 됩니다. 앱 소스를 앱스토어 저장소로 복사할 필요는 없습니다. 서버를 앱마다 새로 배포할 필요도 없습니다.

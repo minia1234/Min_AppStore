@@ -6,6 +6,7 @@
 - [관리자 화면](https://minappstore-api.eum-user.workers.dev/admin)
 - [무료 동기화 실행](https://github.com/AIProject-k/ApplicationTest/actions/workflows/store-sync.yml)
 - [다른 Android 앱 등록·업데이트 가이드](skills/minappstore-publish/references/publishing-guide.md) · [재사용 스킬](skills/minappstore-publish/SKILL.md)
+- [English publishing guide](skills/minappstore-publish/references/publishing-guide.en.md)
 
 ## 무료 운영 구조
 
@@ -29,6 +30,8 @@ Set-Location android
 ```
 
 산출물: `android/app/build/outputs/apk/debug/app-debug.apk`. debug APK는 개발용 인증서입니다. 정식 키로 바꾸면 기존 debug 설치본을 그대로 업데이트할 수 없습니다.
+
+앱·관리자 웹·배포 스킬은 한국어와 영어를 지원합니다. 앱은 기기 언어, 관리자 웹은 브라우저 선호 언어를 따릅니다. [언어 설정과 검증 범위 / Language support](docs/localization.md)를 참고하세요. 게시자가 작성한 앱 설명과 릴리스 노트는 원문을 유지합니다.
 
 ## 서버와 자동화 검증
 

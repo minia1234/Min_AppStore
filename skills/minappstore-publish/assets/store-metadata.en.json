@@ -1,0 +1,10 @@
+{
+  "name": "My App",
+  "summary": "A utility for everyday tasks.",
+  "description": "Manage tasks and view progress in one place.",
+  "category": "Tools",
+  "author": "AIProject-k",
+  "tags": ["tools"],
+  "iconUrl": "",
+  "screenshots": []
+}
