@@ -24,6 +24,8 @@ interface StoreDao {
     @Query("SELECT * FROM downloads WHERE id = :id") suspend fun download(id: String): DownloadEntry?
     @Query("SELECT * FROM downloads WHERE status IN ('QUEUED','DOWNLOADING') ORDER BY queuedAt LIMIT 1") suspend fun nextDownload(): DownloadEntry?
     @Query("SELECT * FROM downloads WHERE status = 'INSTALLING'") suspend fun installing(): List<DownloadEntry>
+    @Query("SELECT * FROM downloads WHERE status = 'INSTALLED' AND filePath != ''") suspend fun installedFiles(): List<DownloadEntry>
+    @Query("UPDATE downloads SET filePath = '' WHERE id = :id") suspend fun clearFile(id: String)
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun putDownload(entry: DownloadEntry)
     @Query("UPDATE downloads SET status = :status, error = :error WHERE id = :id") suspend fun status(id: String, status: String, error: String = "")
     @Query("UPDATE downloads SET status = 'DOWNLOADING', bytes = :bytes WHERE id = :id AND status IN ('QUEUED','DOWNLOADING')") suspend fun progress(id: String, bytes: Long)

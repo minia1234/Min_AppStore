@@ -16,6 +16,7 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.http.GET
 import retrofit2.http.Header
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 interface CatalogApi {
@@ -100,6 +101,11 @@ class StoreRepository(val context: Context) {
                 (installedVersion(entry.packageName) ?: 0) >= entry.versionCode -> dao.status(entry.id, "INSTALLED")
                 entry.packageName !in active -> dao.status(entry.id, "READY", context.getString(R.string.installation_incomplete))
             }
+        }
+        // Installed APKs are dead weight; reinstalling the same version downloads it again.
+        dao.installedFiles().forEach { entry ->
+            val file = File(entry.filePath)
+            if (file.delete() || !file.exists()) dao.clearFile(entry.id)
         }
     }
 

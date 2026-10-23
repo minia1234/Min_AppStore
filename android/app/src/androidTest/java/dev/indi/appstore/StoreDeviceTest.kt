@@ -42,6 +42,21 @@ class StoreDeviceTest {
         } finally { db.close(); context.deleteDatabase(name) }
     }
 
+    @Test fun onlyInstalledEntriesReleaseTheirApkPath() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val name = "installed-check-${System.nanoTime()}.db"
+        val db = Room.databaseBuilder(context, StoreDatabase::class.java, name).build()
+        try {
+            val dao = db.storeDao()
+            dao.putDownload(DownloadEntry("dev.test.app:1", "dev.test.app", "테스트", 1, "1", status = "INSTALLED", total = 3, filePath = "a.apk", iconUrl = "", payload = "{}"))
+            dao.putDownload(DownloadEntry("dev.test.app:2", "dev.test.app", "테스트", 2, "2", status = "READY", total = 3, filePath = "b.apk", iconUrl = "", payload = "{}"))
+            assertEquals(listOf("dev.test.app:1"), dao.installedFiles().map { it.id })
+            dao.clearFile("dev.test.app:1")
+            assertTrue(dao.installedFiles().isEmpty())
+            assertEquals("b.apk", dao.download("dev.test.app:2")?.filePath)
+        } finally { db.close(); context.deleteDatabase(name) }
+    }
+
     @Test fun actualInstalledApkPassesPinnedIdentityAndRejectsWrongPackageAndSigner() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val info = context.packageManager.getPackageInfo(context.packageName, PackageManager.GET_SIGNING_CERTIFICATES)
