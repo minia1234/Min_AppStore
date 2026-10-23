@@ -21,11 +21,12 @@ Workers Free의 SQLite-backed Durable Objects를 사용합니다. [공식 가격
 두 허용 계정 `minia1234`, `AIProject-k`의 **공개** 저장소만 목록으로 제공합니다. 비공개 원본은 GitHub 다운로드 fallback에 사용할 수 없으므로 제외합니다. 모든 관리자 API는 `Authorization: Bearer <관리자 키>`를 요구합니다. 브라우저는 키를 탭 메모리에만 유지하고 로그아웃/새로고침 시 지웁니다.
 
 - 연동: 다음 동기화의 처리 대상으로 저장합니다. 유효한 APK/manifest 릴리스가 있어야 앱 목록에 나옵니다.
-- 연동 해제: 공개 앱 목록에서 제거하고 동기화 대상에서 제외합니다.
+- 자동 연동: 동기화가 그 실행에서 조회한 두 계정의 공개 저장소 중 미연동·비활성 아닌 저장소도 확인해, 정상 릴리스에 manifest 또는 APK 하나가 있고 검증을 통과하면 서버에 `autoLink`로 보내 연동 목록에 추가합니다. manifest 없는 APK는 실제 APK를 내려받아 패키지·버전·서명과 이름(`application-label`)을 읽고, 12KB 이하 PNG/WebP 런처 아이콘을 카탈로그에 넣어 `/icons/{패키지}/{versionCode}.{png|webp}`로 제공합니다. 적응형(XML) 아이콘만 있으면 아이콘 없이 표시합니다. 설명은 저장소 설명, 분류는 `기타`입니다.
+- 연동 해제: 공개 앱 목록에서 제거하고 동기화 대상에서 제외합니다. 릴리스에 APK가 남아 있으면 다음 동기화에서 다시 자동 연동되므로 제외하려면 비활성화합니다.
 - 비활성화: 연동 선택·검증된 서명·파일 정보를 유지하면서 두 기본 목록과 다운로드 API에서 숨깁니다.
 - 비활성 항목 보기: 숨긴 항목을 확인하고 재활성화합니다.
 
-관리자 변경과 동기화 게시에는 단일 writer 잠금과 조건부 JSON 쓰기를 사용합니다. 오래된 카탈로그/연동 ETag로 게시하면 409를 반환합니다. 읽기만 한 스냅샷으로 최신 사용자 설정을 덮어쓸 수 없습니다. 게시 결과가 불확실한 부분 실패는 복구 잠금을 유지합니다.
+관리자 변경과 동기화 게시에는 단일 writer 잠금과 조건부 JSON 쓰기를 사용합니다. 오래된 카탈로그/연동 ETag로 게시하면 409를 반환합니다. 읽기만 한 스냅샷으로 최신 사용자 설정을 덮어쓸 수 없습니다. 게시 결과가 불확실한 부분 실패는 잠금을 남기며, 남은 잠금은 10분 뒤 다음 작업이 넘겨받습니다. 다음 작업도 최신 ETag로 다시 확인하므로 같은 변경을 재시도하면 상태가 맞춰집니다.
 
 ## 앱 등록
 
@@ -46,9 +47,25 @@ python scripts/store_manifest.py --apk path\signed.apk --metadata scripts/store-
 
 공개 실행 저장소의 변수 `STORE_ORIGIN`은 운영 Worker origin입니다. 해당 저장소 secret `MINAPPSTORE_ADMIN_TOKEN`은 Worker `ADMIN_TOKEN`과 같습니다. 공개 GitHub 조회에는 job의 한시적 `GITHUB_TOKEN`을 사용하고 이를 Worker에 저장하지 않습니다. 키는 공개 코드에 들어가지 않습니다. R2/S3 자격증명은 필요 없습니다.
 
-공개 실행기는 `scripts/sync_catalog.py`를 사용하고, 중앙 저장소의 `scripts/sync_free.py`도 같은 게시 계약을 구현합니다. 인증된 `/api/admin/sync`에서 내부 목록과 두 ETag를 읽고 APK 검사 후 후보를 PUT합니다. 서버가 현재 연동/비활성 설정과 서명 연속성을 다시 검사합니다. APK는 GitHub에 그대로 있고 Cloudflare로 전송하지 않습니다.
+공개 실행기는 매 실행마다 비공개 저장소 `main`의 `scripts/`를 읽기 전용 deploy key로 받아 `scripts/sync_free.py`를 실행합니다([워크플로 원본](../scripts/store-sync.yml)). 그래서 이 저장소 `main`에 push하면 다음 실행부터 자동으로 최신 동기화 코드가 쓰입니다. 새 Worker 기능이 필요한 동기화 변경은 **Worker를 먼저 배포한 뒤 push**합니다. 인증된 `/api/admin/sync`에서 내부 목록과 두 ETag를 읽고 APK 검사 후 후보를 PUT합니다. 서버가 현재 연동/비활성 설정과 서명 연속성을 다시 검사합니다. APK는 GitHub에 그대로 있고 Cloudflare로 전송하지 않습니다.
 
-최대 연결100개, 앱당 릴리스100개, JSON2MB, APK512MiB, 작업당 GitHub4000요청/총8GB 전송으로 제한합니다. 한도를 넘으면 기존 목록을 보존하며 중단합니다. 공개 실행 저장소의 기본 무료 runner를 사용하며 유료 spending limit을 늘리지 않습니다.
+최대 연결100개, 앱당 릴리스100개, JSON2MB, APK512MiB, 작업당 GitHub4000요청/총8GB 전송으로 제한합니다. 한도를 넘으면 기존 목록을 보존하며 중단합니다. `sync_free.py`는 앱 하나의 검증·조회 실패 시 그 앱만 마지막 검증 항목을 유지하고 나머지 앱은 게시한 뒤, 실패한 저장소를 출력하고 실행을 실패로 끝냅니다. 공개 실행 저장소의 기본 무료 runner를 사용하며 유료 spending limit을 늘리지 않습니다.
+
+### 공개 실행기 최초 1회 설정
+
+1. 읽기 전용 deploy key를 만들고 비공개 저장소에 등록한 뒤, 개인키를 공개 실행 저장소 secret으로 넣습니다. 개인키는 표준 입력으로만 전달하고 끝나면 지웁니다.
+
+   ```powershell
+   ssh-keygen -t ed25519 -N '""' -C 'ApplicationTest store sync' -f minappstore-source
+   gh repo deploy-key add minappstore-source.pub --repo minia1234/Min_AppStore --title 'ApplicationTest store sync'
+   Get-Content minappstore-source -Raw | gh secret set MINAPPSTORE_SOURCE_KEY --repo AIProject-k/ApplicationTest
+   Remove-Item minappstore-source, minappstore-source.pub
+   ```
+
+2. [scripts/store-sync.yml](../scripts/store-sync.yml)을 `AIProject-k/ApplicationTest`의 `.github/workflows/store-sync.yml`로 교체합니다. 이후 그 저장소의 `scripts/sync_catalog.py`는 쓰지 않으므로 지워도 됩니다.
+3. Actions에서 **Run workflow**로 한 번 실행해 성공을 확인합니다.
+
+deploy key는 이 저장소 하나만 읽을 수 있고 쓰기 권한이 없습니다. 공개 저장소의 Actions 로그는 누구나 볼 수 있으므로, 동기화 오류 출력에 비밀값을 넣지 않습니다. 실행이 깨지면 deploy key를 GitHub에서 삭제하는 것만으로 비공개 저장소 접근이 끊깁니다.
 
 ## 로컬 관리자 키 확인
 

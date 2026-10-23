@@ -2,7 +2,7 @@ import {dispatchSync,handleAdmin,type AdminEnv} from './admin-api';
 interface Env extends Omit<AdminEnv,'STORE'> {STORE?:R2Bucket;STATE?:DurableObjectNamespace}
 export {MinAppStoreState} from './durable-state';
 interface Version { versionCode:number; size:number; githubUrl:string; storageKey?:string }
-interface Catalog { schemaVersion:number; apps:{packageName:string; versions:Version[]; mediaSources?:Record<string,string>;disabled?:boolean}[] }
+interface Catalog { schemaVersion:number; apps:{packageName:string; versions:Version[]; mediaSources?:Record<string,string>;disabled?:boolean;iconUrl?:string;iconData?:string}[] }
 
 export function parseRange(header:string,size:number):{offset:number,length:number}|null {
   const match = /^bytes=(\d*)-(\d*)$/.exec(header);
@@ -29,12 +29,20 @@ export default {
     const releases = /^\/api\/apps\/([A-Za-z0-9_.]+)\/releases$/.exec(path);
     const download = /^\/downloads\/([A-Za-z0-9_.]+)\/([1-9][0-9]*)\.apk$/.exec(path);
     const media = /^\/media\/([0-9a-f]{64})\.webp$/.exec(path);
-    if (path !== '/api/catalog' && !releases && !download && !media) return new Response('Not found',{status:404});
+    const icon = /^\/icons\/([A-Za-z0-9_.]+)\/([1-9][0-9]*)\.(png|webp)$/.exec(path);
+    if (path !== '/api/catalog' && !releases && !download && !media && !icon) return new Response('Not found',{status:404});
     try {
       const object = await env.STORE.get('catalog.json');
       if (!object) return unavailable();
       const stored = await object.json<Catalog>();
-      const catalog = {...stored,apps:stored.apps.filter(app=>app.disabled!==true).map(({disabled,...app})=>app)};
+      const visible = stored.apps.filter(app=>app.disabled!==true);
+      const catalog = {...stored,apps:visible.map(({disabled,iconData,...app})=>app)};
+      if (icon) {
+        const data = visible.find(app=>app.packageName===icon[1] && app.iconUrl?.endsWith(path))?.iconData;
+        if (!data) return new Response('Not found',{status:404});
+        const headers = {'Content-Type':`image/${icon[3]}`,'Cache-Control':'public, max-age=86400, immutable','X-Content-Type-Options':'nosniff'};
+        return new Response(request.method==='HEAD'?null:Uint8Array.from(atob(data),c=>c.charCodeAt(0)),{headers});
+      }
       if (path === '/api/catalog') {
         const headers = {'Content-Type':'application/json; charset=utf-8','ETag':object.httpEtag,'Cache-Control':'public, max-age=60'};
         if (matches(request.headers.get('If-None-Match'),object.httpEtag)) return new Response(null,{status:304,headers});

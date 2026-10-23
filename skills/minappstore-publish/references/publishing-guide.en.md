@@ -108,7 +108,7 @@ MinAppStore checks GitHub asset size and `sha256:` digest and inspects the downl
 3. If disabled, check **Show disabled items** and select **Enable**.
 4. Open **Run sync**, then use GitHub's **Run workflow → main → Run workflow**. If you lack Actions access, ask the administrator or wait for the daily run.
 
-If a new repository does not appear, its cached inventory may be outdated. Run central sync once → **Refresh list** in admin → **Link** the target → run central sync again. Updating inventory does not automatically link new repositories.
+A new public repository links itself on the next central sync once a normal release carries a manifest or a single APK. Run central sync once to apply it now. With an APK and no manifest, the name and icon come from the APK, the description from the repository description, and screenshots and tags stay empty. **Disable** the repository in admin to keep it out of the store.
 
 **Publishing a release in a different app repository does not trigger the central runner immediately.** Current triggers are releases in `ApplicationTest` itself, the daily schedule and manual dispatch. You do not need to copy the admin token or central workflow into every app repository.
 

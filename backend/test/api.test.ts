@@ -33,6 +33,18 @@ test('missing referenced media redirects to source; unknown hashes are 404',asyn
  assert.equal((await worker.fetch(new Request(`https://store.test/media/${'b'.repeat(64)}.webp`),fixture)).status,404);
 });
 
+test('APK icons are served from the catalog but never exposed in it',async()=>{
+ const fixture=env();const bytes='\x89PNG\r\n\x1a\n0000';
+ const withIcon={...catalog,apps:[{...catalog.apps[0],iconUrl:'https://store.test/icons/dev.test.app/2.png',iconData:btoa(bytes)}]};
+ fixture.STORE.get=async()=>({httpEtag:'"icon"',json:async()=>withIcon});
+ assert.equal((await (await worker.fetch(new Request('https://store.test/api/catalog'),fixture)).json() as any).apps[0].iconData,undefined);
+ const icon=await worker.fetch(new Request('https://store.test/icons/dev.test.app/2.png'),fixture);
+ assert.equal(icon.status,200);assert.equal(icon.headers.get('content-type'),'image/png');
+ assert.deepEqual(new Uint8Array(await icon.arrayBuffer()),Uint8Array.from(bytes,c=>c.charCodeAt(0)));
+ for(const path of ['/icons/dev.test.app/1.png','/icons/dev.test.app/2.webp'])assert.equal((await worker.fetch(new Request('https://store.test'+path),fixture)).status,404);
+ withIcon.apps[0]={...withIcon.apps[0],disabled:true} as any;
+ assert.equal((await worker.fetch(new Request('https://store.test/icons/dev.test.app/2.png'),fixture)).status,404);
+});
 test('disabled apps disappear from catalog and cannot use releases downloads or media',async()=>{
  const fixture=env();const digest='c'.repeat(64);
  const hidden={...catalog,apps:[{...catalog.apps[0],disabled:true,mediaSources:{[digest]:'https://raw.githubusercontent.com/owner/app/main/icon.webp'}}]};

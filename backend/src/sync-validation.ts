@@ -42,6 +42,14 @@ export function validateCandidate(catalog:any,previous:any,registry:{linked:stri
       }
     }
     if(old && latest<Math.max(...old.versions.map((item:any)=>item.versionCode)))bad();
+    if('iconData' in app) {
+      // A launcher icon read from the APK is stored here and served at /icons/{package}/{latest versionCode}.{png|webp}.
+      if(typeof app.iconData!=='string')bad();
+      let bytes:Uint8Array;try{bytes=Uint8Array.from(atob(app.iconData),c=>c.charCodeAt(0));}catch{bad();continue;}
+      const ascii=(from:number,to:number)=>String.fromCharCode(...bytes.slice(from,to));
+      const kind=ascii(0,8)==='\x89PNG\r\n\x1a\n'?'png':ascii(0,4)==='RIFF' && ascii(8,12)==='WEBP'?'webp':'';
+      if(bytes.length>12_000 || !kind || app.iconUrl!==`${origin}/icons/${app.packageName}/${latest}.${kind}`)bad();
+    }
   }
   for(const old of oldApps)if(linked.has(old.repository.toLowerCase()) && !seenRepo.has(old.repository.toLowerCase()))bad();
 }

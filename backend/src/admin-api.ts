@@ -88,6 +88,16 @@ async function writeJson(store:R2Bucket,key:string,value:unknown,etag:string|nul
   if(!result)throw new AdminError(409,'설정이 다른 작업에서 변경되었습니다. 관리자 복구가 필요합니다.');
   return result;
 }
+async function acquireLock(store:R2Bucket,lock:Record<string,string>):Promise<boolean> {
+  const body=JSON.stringify({id:crypto.randomUUID(),startedAt:new Date().toISOString(),...lock});
+  const put=(condition:Record<string,string>)=>store.put('sync-lock.json',body,{onlyIf:new Headers(condition),httpMetadata:{contentType:'application/json'}});
+  if(await put({'If-None-Match':'*'}))return true;
+  // A lock left by a partial failure would otherwise block admin forever; every writer re-checks ETags, so taking it over is safe.
+  // shortcut: a writer still alive after 10 minutes would later delete the new holder's lock; compare lock ids on delete if that ever happens.
+  const held=await readJson<{startedAt?:unknown}>(store,'sync-lock.json');
+  if(!held.etag || !(Date.now()-Date.parse(String(held.value?.startedAt))>10*60*1000))return false;
+  return !!await put({'If-Match':held.etag});
+}
 export async function dispatchSync(env:Pick<AdminEnv,'GITHUB_REPOSITORY'|'GITHUB_DISPATCH_TOKEN'|'GITHUB_REF'>):Promise<boolean> {
   if(!env.GITHUB_REPOSITORY || !/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(env.GITHUB_REPOSITORY) || !env.GITHUB_DISPATCH_TOKEN)return false;
   try {
@@ -133,18 +143,26 @@ async function handleAdminRequest(request:Request,env:AdminEnv):Promise<Response
       const input=await requestBody(request,2_000_000);
       if(!input || !('catalog' in input) || !('expectedCatalogEtag' in input) || !('expectedRegistryEtag' in input))throw new AdminError(400,'동기화 스냅샷이 필요합니다.');
       const inventory=input.repositoryInventory===undefined?null:validateInventory(input.repositoryInventory,owners);
-      const acquired=await env.STORE.put('sync-lock.json',JSON.stringify({id:crypto.randomUUID(),startedAt:new Date().toISOString(),action:'publishCatalog'}),{onlyIf:new Headers({'If-None-Match':'*'})});
+      const autoLink=input.autoLink ?? [];
+      if(!Array.isArray(autoLink) || autoLink.length>100 || autoLink.some((name:unknown)=>!allowedRepository(name,owners)))throw new AdminError(400,'허용 계정의 공개 저장소만 연결할 수 있습니다.');
+      const acquired=await acquireLock(env.STORE,{action:'publishCatalog'});
       if(!acquired)return json({message:'다른 작업이 진행 중입니다.',code:'BUSY'},409);
       let attemptedWrite=false;
       try {
         const [catalog,current]=await Promise.all([readJson<any>(env.STORE,'catalog.json'),registry(env.STORE,owners)]);
         if(catalog.etag!==input.expectedCatalogEtag || current.etag!==input.expectedRegistryEtag)throw new AdminError(409,'스냅샷이 변경되었습니다. 다시 조회하고 동기화해 주세요.');
-        try{validateCandidate(input.catalog,catalog.value,current.value,new URL(request.url).origin);}catch{throw new AdminError(400,'연동 상태 또는 앱 서명·메타데이터 검증에 실패했습니다.');}
+        // Repositories whose releases now carry a verified APK are linked by the sync itself.
+        const lower=(name:string)=>name.toLowerCase();
+        const added:string[]=autoLink.filter((name:string,index:number)=>!current.value.linked.some(linked=>lower(linked)===lower(name)) && autoLink.findIndex((other:string)=>lower(other)===lower(name))===index);
+        if(current.value.linked.length+added.length>100)throw new AdminError(400,'연결 가능한 앱 저장소는 최대 100개입니다.');
+        const next={schemaVersion:1 as const,updatedAt:new Date().toISOString(),linked:[...current.value.linked,...added].sort((a,b)=>a.localeCompare(b)),disabled:current.value.disabled || []};
+        try{validateCandidate(input.catalog,catalog.value,next,new URL(request.url).origin);}catch{throw new AdminError(400,'연동 상태 또는 앱 서명·메타데이터 검증에 실패했습니다.');}
         attemptedWrite=true;
+        if(added.length)await writeJson(env.STORE,'repositories.json',next,current.etag);
         const updated=await writeJson(env.STORE,'catalog.json',input.catalog,catalog.etag);
         if(inventory)await cacheInventory(env.STORE,{updatedAt:new Date().toISOString(),repositories:inventory});
         await env.STORE.delete('sync-lock.json');
-        return json({published:true,catalogEtag:updated?.httpEtag,updatedAt:input.catalog.updatedAt});
+        return json({published:true,catalogEtag:updated?.httpEtag,updatedAt:input.catalog.updatedAt,autoLinked:added});
       } catch(error) {
         if(!attemptedWrite)await env.STORE.delete('sync-lock.json');
         throw error;
@@ -174,8 +192,7 @@ async function handleAdminRequest(request:Request,env:AdminEnv):Promise<Response
     if(!allowedRepository(input?.fullName,owners) || (typeof input.linked!=='boolean' && typeof input.disabled!=='boolean') || (input.linked!==undefined && typeof input.linked!=='boolean') || (input.disabled!==undefined && typeof input.disabled!=='boolean'))throw new AdminError(400,'허용된 저장소와 변경할 연결·비활성 여부를 지정해 주세요.');
     let fullName=input.fullName;
     let linked=false,disabled=false;
-    const lock={id:crypto.randomUUID(),startedAt:new Date().toISOString(),action:'setRepositoryState',fullName};
-    const acquired=await env.STORE.put('sync-lock.json',JSON.stringify(lock),{onlyIf:new Headers({'If-None-Match':'*'}),httpMetadata:{contentType:'application/json'}});
+    const acquired=await acquireLock(env.STORE,{action:'setRepositoryState',fullName});
     if(!acquired)return json({message:'동기화 또는 다른 관리자 작업이 진행 중입니다. 잠시 후 다시 시도해 주세요.',code:'BUSY'},409);
     let attemptedWrite=false;
     try {

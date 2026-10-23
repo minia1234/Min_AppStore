@@ -62,6 +62,13 @@ test('shared sync lock returns 409 and prevents changes',async()=>{
  const response=await handleAdmin(req('PUT',{fullName:'minia1234/app',linked:false}),env);
  assert.equal(response.status,409);assert.equal(env.STORE.objects.get('sync-lock.json'),'{"id":"running"}');assert.equal(env.STORE.objects.has('repositories.json'),false);
 });
+test('lock left by a failed write expires after ten minutes but a recent one still blocks',async()=>{
+ const env=setup();env.STORE.objects.set('sync-lock.json',JSON.stringify({id:'running',startedAt:new Date().toISOString()}));
+ assert.equal((await handleAdmin(req('PUT',{fullName:'minia1234/app',linked:false}),env)).status,409);
+ env.STORE.objects.set('sync-lock.json',JSON.stringify({id:'dead',startedAt:new Date(Date.now()-11*60*1000).toISOString()}));
+ const response=await handleAdmin(req('PUT',{fullName:'minia1234/app',linked:false}),env);
+ assert.equal(response.status,200);assert.equal(env.STORE.objects.has('sync-lock.json'),false);
+});
 test('unallowed owner and private repository cannot be linked',async()=>{
  assert.equal((await handleAdmin(req('PUT',{fullName:'outsider/app',linked:true}),setup())).status,400);
  await withGitHub(async()=>{const env=setup();assert.equal((await handleAdmin(req('PUT',{fullName:'minia1234/app',linked:true}),env)).status,400);assert.equal(env.STORE.objects.has('repositories.json'),false);},()=>({...repository,private:true}));

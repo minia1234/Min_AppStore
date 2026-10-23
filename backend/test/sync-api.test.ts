@@ -21,6 +21,21 @@ test('disabled app identity is preserved and flag must match registry',async()=>
 test('signer changes and removal of disabled pins are rejected',async()=>{const {env}=setup(true);const catalog=candidate();(catalog.apps[0] as any).disabled=true;catalog.apps[0].versions[0].signerSha256='c'.repeat(64);assert.equal((await handleAdmin(request('PUT',payload(catalog)),env)).status,400);catalog.apps=[];assert.equal((await handleAdmin(request('PUT',payload(catalog)),env)).status,400);});
 test('new app cannot mix different signers across version history',async()=>{const {env}=setup();const catalog=candidate();catalog.apps[0].versions.push({...version,versionCode:2,signerSha256:'c'.repeat(64),downloadUrl:'https://store.test/downloads/dev.test.app/2.apk'});assert.equal((await handleAdmin(request('PUT',payload(catalog)),env)).status,400);});
 test('sync rejects oversized bodies before acquiring a lock',async()=>{const {env,values}=setup();const response=await handleAdmin(request('PUT',{padding:'x'.repeat(2_000_000)}),env);assert.equal(response.status,413);assert.equal(values.has('sync-lock.json'),false);});
+test('sync links repositories whose verified APK it publishes',async()=>{
+ const {env,values}=setup();values.set('repositories.json',{schemaVersion:1,updatedAt:'2026-10-22',linked:[],disabled:[]});
+ assert.equal((await handleAdmin(request('PUT',payload()),env)).status,400);
+ const response=await handleAdmin(request('PUT',{...payload(),autoLink:[repo]}),env);
+ assert.equal(response.status,200);assert.deepEqual((await response.json() as any).autoLinked,[repo]);
+ assert.deepEqual(values.get('repositories.json').linked,[repo]);assert.equal(values.get('catalog.json').apps[0].repository,repo);
+ assert.equal((await handleAdmin(request('PUT',{...payload(),autoLink:['outsider/app']}),env)).status,400);
+});
+test('APK icon must be a small PNG or WebP served from its own versioned store URL',async()=>{
+ const png=btoa('\x89PNG\r\n\x1a\n'+'0'.repeat(20));
+ for(const [iconData,iconUrl,status] of [[png,'https://store.test/icons/dev.test.app/1.png',200],[png,'https://store.test/icons/dev.test.app/2.png',400],[btoa('<svg/>'),'https://store.test/icons/dev.test.app/1.png',400],[btoa('\x89PNG\r\n\x1a\n'+'0'.repeat(12_000)),'https://store.test/icons/dev.test.app/1.png',400]] as const){
+  const {env}=setup();const catalog=candidate();Object.assign(catalog.apps[0],{iconData,iconUrl});
+  assert.equal((await handleAdmin(request('PUT',payload(catalog)),env)).status,status);
+ }
+});
 const inventory=[{full_name:repo,name:'app',owner:{login:'minia1234'},description:'App description',html_url:`https://github.com/${repo}`,private:false,archived:false,default_branch:'main'}];
 test('sync publishes validated repository inventory cache after catalog',async()=>{const {env,values}=setup();const response=await handleAdmin(request('PUT',{...payload(),repositoryInventory:inventory}),env);assert.equal(response.status,200);assert.equal(values.get('repositories-cache.json').repositories[0].full_name,repo);assert.equal(values.has('sync-lock.json'),false);});
 test('invalid inventory owner or unsafe repository URL rejects publication',async()=>{for(const changes of [{owner:{login:'outsider'}},{html_url:'https://evil.test/minia1234/app'},{private:true}]){const {env,values}=setup();const response=await handleAdmin(request('PUT',{...payload(),repositoryInventory:[{...inventory[0],...changes}]}),env);assert.equal(response.status,400);assert.equal(values.get('catalog.json').apps.length,0);}});
