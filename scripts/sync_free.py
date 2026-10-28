@@ -94,9 +94,6 @@ def build_catalog(snapshot, github, origin, inventory=()):
     registry=snapshot['registry']
     selected=selected_repositories(registry,OWNERS)
     disabled=disabled_repositories(registry,OWNERS)
-    linked={name.lower() for name in selected}
-    # Public repositories join on their own once a release carries an APK; disabling one keeps it out.
-    selected=selected+[repo['full_name'] for repo in inventory if repo['full_name'].lower() not in linked|disabled]
     old={app['repository'].lower():copy.deepcopy(app) for app in snapshot['catalog']['apps']}
     apps={name:app for name,app in old.items() if name in {item.lower() for item in selected}}
     for name,app in apps.items():
@@ -198,11 +195,9 @@ def main():
     github=GitHub(os.environ['GITHUB_TOKEN'])
     inventory=collect_inventory(github)
     catalog,failures=build_catalog(snapshot,github,origin,inventory)
-    linked={name.lower() for name in snapshot['registry']['linked']}
-    auto_link=[app['repository'] for app in catalog['apps'] if app['repository'].lower() not in linked]
-    result=api(origin,token,'PUT',{'catalog':catalog,'autoLink':auto_link,'repositoryInventory':inventory,'expectedCatalogEtag':snapshot['catalogEtag'],'expectedRegistryEtag':snapshot['registryEtag']})
+    result=api(origin,token,'PUT',{'catalog':catalog,'repositoryInventory':inventory,'expectedCatalogEtag':snapshot['catalogEtag'],'expectedRegistryEtag':snapshot['registryEtag']})
     if result.get('published') is not True: raise RuntimeError('Store did not confirm publication')
-    print(f"Published {len(catalog['apps'])} verified apps ({len(auto_link)} newly linked); APK storage: public GitHub Releases")
+    print(f"Published {len(catalog['apps'])} verified apps; APK storage: public GitHub Releases")
     if failures:
         # Fail the run so the owner sees which repositories kept their previous entry.
         print('Kept the last verified entry for:',*failures,sep='\n',file=sys.stderr)

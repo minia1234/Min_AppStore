@@ -1,6 +1,6 @@
 # MinAppStore
 
-개인 Android 앱을 모아 설치·업데이트하는 앱스토어입니다. 소스 저장소는 **비공개** `minia1234/Min_AppStore`이며, Android 패키지 ID는 기존 설치와 호환되는 `dev.indi.appstore`를 유지합니다.
+개인 Android 앱을 모아 설치·업데이트하는 앱스토어입니다. 소스 저장소는 공개 `minia1234/Min_AppStore`이며, Android 패키지 ID는 기존 설치와 호환되는 `dev.indi.appstore`를 유지합니다.
 
 - [운영 API](https://minappstore-api.eum-user.workers.dev/api/catalog)
 - [관리자 화면](https://minappstore-api.eum-user.workers.dev/admin)
@@ -12,11 +12,11 @@
 
 **R2·유료 플랜·결제수단 등록을 사용하지 않습니다.** APK와 이미지는 공개 GitHub Releases/원본 URL에 두고, Cloudflare Workers + SQLite Durable Object에는 앱 목록과 연동·비활성 설정만 저장합니다. Workers Free의 한도를 넘으면 서비스가 제한됩니다. 계정 플랜을 유료로 전환하는 코드는 없습니다. 자동 동기화는 공개 저장소의 기본 무료 Linux 실행기를 사용하며, 유료 예산을 설정하거나 늘리지 않습니다.
 
-관리자가 `minia1234`, `AIProject-k` 두 계정의 공개 저장소를 조회해 연동합니다. 릴리스에 APK가 하나 있는 공개 저장소는 동기화 때 **자동 연동**됩니다. `store-manifest.json`이 없으면 이름·아이콘은 APK에서, 설명은 저장소 설명에서 가져옵니다. 스토어에서 빼려면 **비활성화**합니다(연동 해제만 하면 다음 동기화에서 다시 연동됩니다). **비활성화**는 연동을 유지하며 관리자 기본 목록·스토어 목록과 직접 다운로드 경로에서 숨깁니다. **비활성 항목 보기**에서 복원할 수 있습니다. GitHub 원본은 삭제하지 않습니다.
+관리자가 `minia1234`, `AIProject-k` 두 계정의 공개 저장소를 조회해 직접 연동합니다. 연동한 저장소만 동기화합니다. `store-manifest.json`이 없고 APK가 하나이면 이름·아이콘은 APK에서, 설명은 저장소 설명에서 가져옵니다. **비활성화**는 연동을 유지하며 관리자 기본 목록·스토어 목록과 직접 다운로드 경로에서 숨깁니다. **비활성 항목 보기**에서 복원할 수 있습니다. GitHub 원본은 삭제하지 않습니다.
 
 저장된 연동은 공개 저장소 `AIProject-k/ApplicationTest`의 무료 GitHub Actions에서 매일 **03:00(KST)** 동기화합니다. 해당 저장소의 릴리스 게시 시에도 실행합니다. 지금 반영하려면 관리자 화면의 **동기화 실행** 링크에서 `Run workflow`를 실행합니다. 넓은 GitHub 계정 토큰을 Cloudflare에 저장하지 않습니다.
 
-비공개 중앙 저장소의 Actions는 계정 결제 문제/지출 제한으로 실행이 차단된 상태라 자동 실행하지 않습니다. 사용자가 승인한 워크플로·검사 스크립트 두 파일만 공개 테스트 저장소에 추가했습니다. Android·관리 화면 소스는 비공개로 유지합니다.
+중앙 동기화는 현재 `ApplicationTest` 저장소의 워크플로를 사용합니다. 소스 저장소 공개 이후의 Actions 실행 및 설정은 별도 검증이 필요합니다.
 
 ## Android
 

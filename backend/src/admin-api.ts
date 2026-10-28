@@ -143,26 +143,19 @@ async function handleAdminRequest(request:Request,env:AdminEnv):Promise<Response
       const input=await requestBody(request,2_000_000);
       if(!input || !('catalog' in input) || !('expectedCatalogEtag' in input) || !('expectedRegistryEtag' in input))throw new AdminError(400,'동기화 스냅샷이 필요합니다.');
       const inventory=input.repositoryInventory===undefined?null:validateInventory(input.repositoryInventory,owners);
-      const autoLink=input.autoLink ?? [];
-      if(!Array.isArray(autoLink) || autoLink.length>100 || autoLink.some((name:unknown)=>!allowedRepository(name,owners)))throw new AdminError(400,'허용 계정의 공개 저장소만 연결할 수 있습니다.');
+      if(input.autoLink!==undefined && (!Array.isArray(input.autoLink) || input.autoLink.length))throw new AdminError(400,'저장소는 관리자 화면에서 직접 연동해야 합니다.');
       const acquired=await acquireLock(env.STORE,{action:'publishCatalog'});
       if(!acquired)return json({message:'다른 작업이 진행 중입니다.',code:'BUSY'},409);
       let attemptedWrite=false;
       try {
         const [catalog,current]=await Promise.all([readJson<any>(env.STORE,'catalog.json'),registry(env.STORE,owners)]);
         if(catalog.etag!==input.expectedCatalogEtag || current.etag!==input.expectedRegistryEtag)throw new AdminError(409,'스냅샷이 변경되었습니다. 다시 조회하고 동기화해 주세요.');
-        // Repositories whose releases now carry a verified APK are linked by the sync itself.
-        const lower=(name:string)=>name.toLowerCase();
-        const added:string[]=autoLink.filter((name:string,index:number)=>!current.value.linked.some(linked=>lower(linked)===lower(name)) && autoLink.findIndex((other:string)=>lower(other)===lower(name))===index);
-        if(current.value.linked.length+added.length>100)throw new AdminError(400,'연결 가능한 앱 저장소는 최대 100개입니다.');
-        const next={schemaVersion:1 as const,updatedAt:new Date().toISOString(),linked:[...current.value.linked,...added].sort((a,b)=>a.localeCompare(b)),disabled:current.value.disabled || []};
-        try{validateCandidate(input.catalog,catalog.value,next,new URL(request.url).origin);}catch{throw new AdminError(400,'연동 상태 또는 앱 서명·메타데이터 검증에 실패했습니다.');}
+        try{validateCandidate(input.catalog,catalog.value,current.value,new URL(request.url).origin);}catch{throw new AdminError(400,'연동 상태 또는 앱 서명·메타데이터 검증에 실패했습니다.');}
         attemptedWrite=true;
-        if(added.length)await writeJson(env.STORE,'repositories.json',next,current.etag);
         const updated=await writeJson(env.STORE,'catalog.json',input.catalog,catalog.etag);
         if(inventory)await cacheInventory(env.STORE,{updatedAt:new Date().toISOString(),repositories:inventory});
         await env.STORE.delete('sync-lock.json');
-        return json({published:true,catalogEtag:updated?.httpEtag,updatedAt:input.catalog.updatedAt,autoLinked:added});
+        return json({published:true,catalogEtag:updated?.httpEtag,updatedAt:input.catalog.updatedAt,autoLinked:[]});
       } catch(error) {
         if(!attemptedWrite)await env.STORE.delete('sync-lock.json');
         throw error;

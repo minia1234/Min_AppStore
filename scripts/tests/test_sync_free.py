@@ -95,14 +95,13 @@ class FreeSyncTests(unittest.TestCase):
         self.assertEqual(failures,[])
         self.assertEqual(catalog['apps'][0],previous)
 
-    def test_inventory_repositories_with_apk_releases_link_themselves_unless_disabled(self):
+    def test_inventory_does_not_link_repositories(self):
         self.snapshot['registry']={'schemaVersion':1,'linked':[],'disabled':['AIProject-k/hidden']}
         inventory=[{'full_name':'minia1234/app'},{'full_name':'AIProject-k/hidden'}]
         with patch('sync_free.inspect_apk',return_value=self.actual()),patch('sync_free.apk_label_icon',return_value=('앱',None)):
             catalog,failures=build_catalog(self.snapshot,ApkOnlyGitHub(self.manifest,self.asset),'https://minappstore.test',inventory)
         self.assertEqual(failures,[])
-        self.assertEqual([app['repository'] for app in catalog['apps']],['minia1234/app'])
-        self.assertEqual(catalog['apps'][0]['iconUrl'],'')
+        self.assertEqual(catalog['apps'],[])
 
     def test_apk_icon_is_the_largest_raster_under_the_size_cap(self):
         badging="application-label:'내 앱'\napplication-icon-640:'res/big.png'\napplication-icon-480:'res/mid.png'\napplication-icon-65534:'res/adaptive.xml'\n"

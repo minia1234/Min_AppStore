@@ -21,12 +21,12 @@ test('disabled app identity is preserved and flag must match registry',async()=>
 test('signer changes and removal of disabled pins are rejected',async()=>{const {env}=setup(true);const catalog=candidate();(catalog.apps[0] as any).disabled=true;catalog.apps[0].versions[0].signerSha256='c'.repeat(64);assert.equal((await handleAdmin(request('PUT',payload(catalog)),env)).status,400);catalog.apps=[];assert.equal((await handleAdmin(request('PUT',payload(catalog)),env)).status,400);});
 test('new app cannot mix different signers across version history',async()=>{const {env}=setup();const catalog=candidate();catalog.apps[0].versions.push({...version,versionCode:2,signerSha256:'c'.repeat(64),downloadUrl:'https://store.test/downloads/dev.test.app/2.apk'});assert.equal((await handleAdmin(request('PUT',payload(catalog)),env)).status,400);});
 test('sync rejects oversized bodies before acquiring a lock',async()=>{const {env,values}=setup();const response=await handleAdmin(request('PUT',{padding:'x'.repeat(2_000_000)}),env);assert.equal(response.status,413);assert.equal(values.has('sync-lock.json'),false);});
-test('sync links repositories whose verified APK it publishes',async()=>{
+test('sync cannot link repositories',async()=>{
  const {env,values}=setup();values.set('repositories.json',{schemaVersion:1,updatedAt:'2026-10-22',linked:[],disabled:[]});
  assert.equal((await handleAdmin(request('PUT',payload()),env)).status,400);
  const response=await handleAdmin(request('PUT',{...payload(),autoLink:[repo]}),env);
- assert.equal(response.status,200);assert.deepEqual((await response.json() as any).autoLinked,[repo]);
- assert.deepEqual(values.get('repositories.json').linked,[repo]);assert.equal(values.get('catalog.json').apps[0].repository,repo);
+ assert.equal(response.status,400);
+ assert.deepEqual(values.get('repositories.json').linked,[]);assert.equal(values.get('catalog.json').apps.length,0);
  assert.equal((await handleAdmin(request('PUT',{...payload(),autoLink:['outsider/app']}),env)).status,400);
 });
 test('APK icon must be a small PNG or WebP served from its own versioned store URL',async()=>{
