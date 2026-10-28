@@ -41,3 +41,4 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           STORE_ORIGIN: ${{ vars.STORE_ORIGIN }}
           MINAPPSTORE_ADMIN_TOKEN: ${{ secrets.MINAPPSTORE_ADMIN_TOKEN }}
+          MINAPPSTORE_SYNC_TOKEN: ${{ secrets.MINAPPSTORE_SYNC_TOKEN }}

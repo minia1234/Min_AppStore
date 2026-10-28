@@ -190,7 +190,7 @@ def api(origin,token,method='GET',payload=None):
 
 def main():
     origin=store_origin(os.environ['STORE_ORIGIN'])
-    token=os.environ['MINAPPSTORE_ADMIN_TOKEN']
+    token=os.environ.get('MINAPPSTORE_SYNC_TOKEN') or os.environ['MINAPPSTORE_ADMIN_TOKEN']
     snapshot=api(origin,token)
     github=GitHub(os.environ['GITHUB_TOKEN'])
     inventory=collect_inventory(github)

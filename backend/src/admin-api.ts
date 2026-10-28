@@ -3,6 +3,7 @@ import {validateCandidate} from './sync-validation';
 export interface AdminEnv {
   STORE:R2Bucket;
   ADMIN_TOKEN?:string;
+  SYNC_TOKEN?:string;
   GITHUB_OWNERS?:string;
   GITHUB_READ_TOKEN?:string;
   GITHUB_REPOSITORY?:string;
@@ -91,12 +92,8 @@ async function writeJson(store:R2Bucket,key:string,value:unknown,etag:string|nul
 async function acquireLock(store:R2Bucket,lock:Record<string,string>):Promise<boolean> {
   const body=JSON.stringify({id:crypto.randomUUID(),startedAt:new Date().toISOString(),...lock});
   const put=(condition:Record<string,string>)=>store.put('sync-lock.json',body,{onlyIf:new Headers(condition),httpMetadata:{contentType:'application/json'}});
-  if(await put({'If-None-Match':'*'}))return true;
-  // A lock left by a partial failure would otherwise block admin forever; every writer re-checks ETags, so taking it over is safe.
-  // shortcut: a writer still alive after 10 minutes would later delete the new holder's lock; compare lock ids on delete if that ever happens.
-  const held=await readJson<{startedAt?:unknown}>(store,'sync-lock.json');
-  if(!held.etag || !(Date.now()-Date.parse(String(held.value?.startedAt))>10*60*1000))return false;
-  return !!await put({'If-Match':held.etag});
+  // An expired lock may still belong to a live or partially completed writer.
+  return !!await put({'If-None-Match':'*'});
 }
 export async function dispatchSync(env:Pick<AdminEnv,'GITHUB_REPOSITORY'|'GITHUB_DISPATCH_TOKEN'|'GITHUB_REF'>):Promise<boolean> {
   if(!env.GITHUB_REPOSITORY || !/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(env.GITHUB_REPOSITORY) || !env.GITHUB_DISPATCH_TOKEN)return false;
@@ -131,8 +128,9 @@ async function handleAdminRequest(request:Request,env:AdminEnv):Promise<Response
   }
   if(path!=='/api/admin/repositories' && path!=='/api/admin/sync')return json({message:'Not found'},404);
   try {
-    if(!env.ADMIN_TOKEN || env.ADMIN_TOKEN.length<32)throw new AdminError(503,'관리자 인증 설정이 필요합니다.');
-    if(!await authorized(request,env.ADMIN_TOKEN))return json({message:'관리자 인증이 필요합니다.'},401);
+    const expected=path==='/api/admin/sync' && env.SYNC_TOKEN!==undefined ? env.SYNC_TOKEN : env.ADMIN_TOKEN;
+    if(!expected || expected.length<32)throw new AdminError(503,'관리자 인증 설정이 필요합니다.');
+    if(!await authorized(request,expected))return json({message:'관리자 인증이 필요합니다.'},401);
     const owners=allowedOwners(env);
     if(path==='/api/admin/sync') {
       if(request.method==='GET') {

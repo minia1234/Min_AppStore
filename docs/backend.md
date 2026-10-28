@@ -48,6 +48,12 @@ python scripts/store_manifest.py --apk path\signed.apk --metadata scripts/store-
 
 공개 실행 저장소의 변수 `STORE_ORIGIN`은 운영 Worker origin입니다. 해당 저장소 secret `MINAPPSTORE_ADMIN_TOKEN`은 Worker `ADMIN_TOKEN`과 같습니다. 공개 GitHub 조회에는 job의 한시적 `GITHUB_TOKEN`을 사용하고 이를 Worker에 저장하지 않습니다. 키는 공개 코드에 들어가지 않습니다. R2/S3 자격증명은 필요 없습니다.
 
+### 동기화 토큰 전환
+
+기존 설정에서는 동기화가 `ADMIN_TOKEN`을 사용합니다. 분리하려면 먼저 최신 실행기와 워크플로를 배포하고 새 고유 토큰을 실행 저장소의 `MINAPPSTORE_SYNC_TOKEN`에 설정합니다. 그다음 Worker secret `SYNC_TOKEN`에 같은 값을 설정합니다. `SYNC_TOKEN`이 설정된 서버는 동기화 API에 이 토큰만 받고, 관리자 API에는 `ADMIN_TOKEN`만 받습니다. 설정 전에는 기존 토큰을 사용합니다. 전환 후 Actions와 관리자 화면을 각각 확인하고 실행 저장소의 기존 관리자 토큰을 제거합니다. 실패 시 `SYNC_TOKEN` 설정을 제거하면 기존 방식으로 돌아갑니다. 토큰 값은 출력하거나 커밋하지 않습니다.
+
+잠금은 시간 경과만으로 해제하지 않습니다. 중단 또는 불확실한 쓰기 후 잠금이 남으면 동기화와 관리자 변경이 차단됩니다. 운영자가 실행 종료와 카탈로그·연동 설정의 일관성을 확인해야 하며, 안전한 복구 API는 아직 구현되지 않았습니다.
+
 공개 실행기는 매 실행마다 비공개 저장소 `main`의 `scripts/`를 읽기 전용 deploy key로 받아 `scripts/sync_free.py`를 실행합니다([워크플로 원본](../scripts/store-sync.yml)). 그래서 이 저장소 `main`에 push하면 다음 실행부터 자동으로 최신 동기화 코드가 쓰입니다. 새 Worker 기능이 필요한 동기화 변경은 **Worker를 먼저 배포한 뒤 push**합니다. 인증된 `/api/admin/sync`에서 내부 목록과 두 ETag를 읽고 APK 검사 후 후보를 PUT합니다. 서버가 현재 연동/비활성 설정과 서명 연속성을 다시 검사합니다. APK는 GitHub에 그대로 있고 Cloudflare로 전송하지 않습니다.
 
 최대 연결100개, 앱당 릴리스100개, JSON2MB, APK512MiB, 작업당 GitHub4000요청/총8GB 전송으로 제한합니다. 한도를 넘으면 기존 목록을 보존하며 중단합니다. `sync_free.py`는 앱 하나의 검증·조회 실패 시 그 앱만 마지막 검증 항목을 유지하고 나머지 앱은 게시한 뒤, 실패한 저장소를 출력하고 실행을 실패로 끝냅니다. 공개 실행 저장소의 기본 무료 runner를 사용하며 유료 spending limit을 늘리지 않습니다.

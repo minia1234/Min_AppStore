@@ -14,6 +14,14 @@ function setup(disabled=false){
 function request(method='GET',body?:any,auth=token){return new Request('https://store.test/api/admin/sync',{method,headers:{Authorization:'Bearer '+auth,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});}
 const payload=(catalog=candidate())=>({catalog,expectedCatalogEtag:'"catalog.json"',expectedRegistryEtag:'"repositories.json"'});
 test('sync snapshot requires authentication and includes internal disabled pins',async()=>{const {env}=setup(true);assert.equal((await handleAdmin(request('GET',undefined,'bad'),env)).status,401);const response=await handleAdmin(request(),env);assert.equal(response.status,200);const body:any=await response.json();assert.equal(body.catalog.apps[0].disabled,true);assert.equal(body.registry.linked[0],repo);assert.equal(body.catalogEtag,'"catalog.json"');});
+test('dedicated sync token cannot manage repositories and admin token cannot sync when configured',async()=>{
+ const {env}=setup();const sync='sync-token-'.repeat(4);const configured={...env,SYNC_TOKEN:sync};
+ assert.equal((await handleAdmin(request(),configured)).status,401);
+ assert.equal((await handleAdmin(request('GET',undefined,sync),configured)).status,200);
+ const adminRequest=new Request('https://store.test/api/admin/repositories',{headers:{Authorization:'Bearer '+sync}});
+ assert.equal((await handleAdmin(adminRequest,configured)).status,401);
+ assert.equal((await handleAdmin(request(),{...env,SYNC_TOKEN:''})).status,503);
+});
 test('validated GitHub-only candidate publishes under snapshot ETags',async()=>{const {env,values}=setup();const response=await handleAdmin(request('PUT',payload()),env);assert.equal(response.status,200);assert.equal(values.get('catalog.json').apps[0].repository,repo);assert.equal(values.has('sync-lock.json'),false);});
 test('stale registry snapshot is rejected without catalog overwrite',async()=>{const {env,values}=setup();const response=await handleAdmin(request('PUT',{...payload(),expectedRegistryEtag:'"stale"'}),env);assert.equal(response.status,409);assert.equal(values.get('catalog.json').apps.length,0);assert.equal(values.has('sync-lock.json'),false);});
 test('sync refuses storage objects, wrong source owner and unlinked entries',async()=>{for(const mutate of [(a:any)=>a.versions[0].storageKey='apk/x',(a:any)=>a.mediaSources={},(a:any)=>a.repository='AIProject-k/other',(a:any)=>a.versions[0].githubUrl='https://github.com/outsider/app/releases/download/v1/app.apk',(a:any)=>a.versions[0].sha256='invalid']){const {env,values}=setup();const catalog=candidate();mutate(catalog.apps[0]);assert.equal((await handleAdmin(request('PUT',payload(catalog)),env)).status,400);assert.equal(values.get('catalog.json').apps.length,0);}});
