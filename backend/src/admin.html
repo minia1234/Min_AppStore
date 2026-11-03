@@ -214,7 +214,7 @@
       "활성화했습니다. 필요하면 저장소를 연동해 주세요.": "Enabled. Link the repository if needed.",
       "연동을 해제했습니다. GitHub 원본 릴리스는 유지됩니다.": "Unlinked. The original GitHub releases are preserved.",
       "변경을 저장하고 동기화를 요청했습니다.": "Changes saved and sync requested.",
-      "설정을 저장했습니다. 매일 03:00(KST)에 동기화됩니다. 지금 반영하려면 ‘동기화 실행’을 눌러 GitHub에서 실행하세요.": "Settings saved. Sync runs daily at 03:00 KST. To apply now, open Run sync and start the workflow on GitHub.",
+      "설정을 저장했습니다. 6시간마다(한국 시간 03:00·09:00·15:00·21:00) 동기화됩니다. 지금 반영하려면 ‘동기화 실행’을 눌러 GitHub에서 실행하세요.": "Settings saved. Sync runs every 6 hours at 03:00, 09:00, 15:00 and 21:00 KST. To apply now, open Run sync and start the workflow on GitHub.",
       "서버에 연결하지 못했습니다. 변경 반영 여부는 목록을 새로고침해 확인하세요.": "Unable to connect. Refresh the list to check whether the changes were saved."
 };
     const tr = text => language === "en" ? translations[text] ?? text : text;
@@ -389,7 +389,7 @@
         repo.linked = data.linked;
         repo.disabled = data.disabled;
         render();
-        const message = data.disabled ? tr("비활성화했습니다. 두 기본 목록에서 숨기며 연동 선택은 유지됩니다.") : changes.disabled === false && !data.linked ? tr("활성화했습니다. 필요하면 저장소를 연동해 주세요.") : !data.linked ? tr("연동을 해제했습니다. GitHub 원본 릴리스는 유지됩니다.") : data.syncRequested ? tr("변경을 저장하고 동기화를 요청했습니다.") : tr("설정을 저장했습니다. 매일 03:00(KST)에 동기화됩니다. 지금 반영하려면 ‘동기화 실행’을 눌러 GitHub에서 실행하세요.");
+        const message = data.disabled ? tr("비활성화했습니다. 두 기본 목록에서 숨기며 연동 선택은 유지됩니다.") : changes.disabled === false && !data.linked ? tr("활성화했습니다. 필요하면 저장소를 연동해 주세요.") : !data.linked ? tr("연동을 해제했습니다. GitHub 원본 릴리스는 유지됩니다.") : data.syncRequested ? tr("변경을 저장하고 동기화를 요청했습니다.") : tr("설정을 저장했습니다. 6시간마다(한국 시간 03:00·09:00·15:00·21:00) 동기화됩니다. 지금 반영하려면 ‘동기화 실행’을 눌러 GitHub에서 실행하세요.");
         notice(message + (data.message ? " " + data.message : ""), data.disabled || !data.linked || data.syncRequested ? "success" : "warning");
       } catch (error) {
         if (error.name !== "AbortError") notice(error instanceof TypeError ? tr("서버에 연결하지 못했습니다. 변경 반영 여부는 목록을 새로고침해 확인하세요.") : error.message, "error");

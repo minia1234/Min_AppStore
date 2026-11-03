@@ -12,7 +12,7 @@ If the source is private, keep it private and choose a public distribution repos
 | Public catalog | https://minappstore-api.eum-user.workers.dev/api/catalog |
 | Allowed repository owners | minia1234, AIProject-k |
 | Central runner | https://github.com/AIProject-k/ApplicationTest/actions/workflows/store-sync.yml |
-| Automatic sync | Daily at 03:00 KST (18:00 UTC on the previous day); execution may be delayed |
+| Automatic sync | Every 6 hours at 03:00, 09:00, 15:00, 21:00 KST (00:00, 06:00, 12:00, 18:00 UTC); execution may be delayed |
 | Immediate sync | Run workflow → main in the central runner |
 
 Repositories owned by other accounts are not currently supported. Individual app repositories do not need Cloudflare credentials or the admin token.
@@ -106,11 +106,11 @@ MinAppStore checks GitHub asset size and `sha256:` digest and inspects the downl
 1. Open the admin URL and sign in with the existing admin token. Do not put it in app repositories or public files.
 2. Search for the public distribution repository and select **Link**.
 3. If disabled, check **Show disabled items** and select **Enable**.
-4. Open **Run sync**, then use GitHub's **Run workflow → main → Run workflow**. If you lack Actions access, ask the administrator or wait for the daily run.
+4. Open **Run sync**, then use GitHub's **Run workflow → main → Run workflow**. If you lack Actions access, ask the administrator or wait for the next scheduled run.
 
 Link a new public repository in admin, then run central sync. With an APK and no manifest, the name and icon come from the APK, the description from the repository description, and screenshots and tags stay empty.
 
-**Publishing a release in a different app repository does not trigger the central runner immediately.** Current triggers are releases in `ApplicationTest` itself, the daily schedule and manual dispatch. You do not need to copy the admin token or central workflow into every app repository.
+**Publishing a release in a different app repository does not trigger the central runner immediately.** Current triggers are releases in `ApplicationTest` itself, the six-hour schedule and manual dispatch. You do not need to copy the admin token or central workflow into every app repository.
 
 ## 6. Confirm the result and publish updates
 

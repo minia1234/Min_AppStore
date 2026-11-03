@@ -13,7 +13,7 @@ The shared APK inspector is [assets/store_manifest.py](assets/store_manifest.py)
 
 - Origin: `https://minappstore-api.eum-user.workers.dev`; admin `/admin`; public catalog `/api/catalog`.
 - Allowed owners: `minia1234`, `AIProject-k`. Only public distribution repositories from these accounts are currently supported.
-- Central runner: `store-sync.yml` in public `AIProject-k/ApplicationTest`. It runs daily at 03:00 KST, on releases published in that runner repository, and on manual dispatch. Publishing in a different app repository does not immediately trigger it.
+- Central runner: `store-sync.yml` in public `AIProject-k/ApplicationTest`. It runs every six hours (03:00, 09:00, 15:00 and 21:00 KST), on releases published in that runner repository, and on manual dispatch. Publishing in a different app repository does not immediately trigger it.
 - Keep the free architecture: Workers Free + SQLite Durable Object metadata, with APKs in public GitHub Releases. Do not enable R2, paid plans or higher spending limits.
 - The admin token belongs only in the admin session and existing central runner secret. Do not copy it into each app repository or expose it in chat, source, URLs or logs.
 

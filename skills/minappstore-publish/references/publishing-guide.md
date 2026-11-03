@@ -14,7 +14,7 @@
 | 앱 목록 | https://minappstore-api.eum-user.workers.dev/api/catalog |
 | 허용 배포 저장소 소유자 | minia1234, AIProject-k |
 | 중앙 동기화 실행 | https://github.com/AIProject-k/ApplicationTest/actions/workflows/store-sync.yml |
-| 자동 반영 | 매일 03:00 KST, GitHub 실행 지연 가능 |
+| 자동 반영 | 6시간마다(03:00·09:00·15:00·21:00 KST), 실행 지연 가능 |
 | 즉시 반영 | 중앙 워크플로의 Run workflow → main |
 
 다른 계정 소유의 저장소는 현재 허용하지 않습니다. 각 앱에 Cloudflare 키나 관리자 토큰을 등록하지 않습니다. 공개 저장소의 기존 중앙 실행기에서 동기화합니다.
@@ -106,11 +106,11 @@ gh release view $tag --repo $repo --json url,isDraft,isPrerelease,assets
 1. 관리자 주소에 접속해 기존 관리자 토큰으로 로그인합니다. 토큰을 다른 앱 프로젝트나 공개 파일에 넣지 않습니다.
 2. 앱의 공개 배포 저장소를 검색하고 **연동**을 누릅니다.
 3. 비활성 상태라면 **비활성 항목 보기**를 체크하고 **활성화**합니다.
-4. **동기화 실행** 링크를 눌러 GitHub에서 **Run workflow → main → Run workflow**를 실행합니다. Actions 실행 권한이 없으면 관리자에게 요청하거나 일일 실행을 기다립니다.
+4. **동기화 실행** 링크를 눌러 GitHub에서 **Run workflow → main → Run workflow**를 실행합니다. Actions 실행 권한이 없으면 관리자에게 요청하거나 다음 예약 실행을 기다립니다.
 
 새 공개 저장소는 관리자 화면에서 연동한 후 중앙 동기화를 실행합니다. manifest 없이 APK만 올리면 이름·아이콘은 APK에서, 설명은 저장소 설명에서 가져오고 스크린샷·태그는 비어 있습니다.
 
-**다른 앱 저장소의 Release 게시 이벤트가 중앙 실행기를 바로 깨우지는 않습니다.** 현재 `ApplicationTest` 자체 릴리스 이벤트, 매일 03:00 KST, 수동 실행만 연결돼 있습니다. 앱마다 관리자 토큰이나 추가 워크플로를 복제할 필요는 없습니다.
+**다른 앱 저장소의 Release 게시 이벤트가 중앙 실행기를 바로 깨우지는 않습니다.** 현재 `ApplicationTest` 자체 릴리스 이벤트, 6시간 주기, 수동 실행만 연결돼 있습니다. 앱마다 관리자 토큰이나 추가 워크플로를 복제할 필요는 없습니다.
 
 ## 6. 반영을 확인합니다
 

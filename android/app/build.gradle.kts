@@ -11,8 +11,8 @@ android {
         applicationId = "dev.indi.appstore"
         minSdk = 26
         targetSdk = 36
-        versionCode = providers.gradleProperty("storeVersionCode").orElse("2").get().toInt()
-        versionName = providers.gradleProperty("storeVersionName").orElse("0.2.0").get()
+        versionCode = providers.gradleProperty("storeVersionCode").orElse("3").get().toInt()
+        versionName = providers.gradleProperty("storeVersionName").orElse("0.2.1").get()
         buildConfigField("String", "STORE_ORIGIN", "\"https://minappstore-api.eum-user.workers.dev\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

@@ -10,7 +10,7 @@
 | SQLite Durable Object `MinAppStoreState` | 카탈로그·연동 목록·비활성 상태·게시 잠금 |
 | 공개 GitHub Releases | APK 원본 및 버전 기록 |
 | 비공개 GitHub `minia1234/Min_AppStore` | 소스·검증·운영 문서 |
-| 공개 GitHub `AIProject-k/ApplicationTest` | 무료 일일/수동 카탈로그 동기화 실행기 |
+| 공개 GitHub `AIProject-k/ApplicationTest` | 무료 6시간/수동 카탈로그 동기화 실행기 |
 
 URL: `https://minappstore-api.eum-user.workers.dev`. 관리자 `/admin`, 공개 목록 `/api/catalog`, 앱 릴리스 `/api/apps/{package}/releases`, 다운로드 `/downloads/{package}/{versionCode}.apk`입니다. 다운로드는 검증된 공개 GitHub asset으로 redirect됩니다. APK·이미지를 Cloudflare에 저장하지 않습니다.
 
@@ -44,7 +44,7 @@ python scripts/store_manifest.py --apk path\signed.apk --metadata scripts/store-
 
 ## 동기화
 
-공개 `AIProject-k/ApplicationTest`의 `.github/workflows/store-sync.yml`은 매일 UTC18:00(한국03:00), 해당 저장소 릴리스 게시, 수동 실행을 지원합니다. 즉시 반영하려면 관리자 상단 **동기화 실행** 링크에서 GitHub `Run workflow`를 누릅니다. 비공개 저장소는 결제/지출 제한으로 runner가 시작되지 않았으며, 지출 한도를 올리지 않고 공개 저장소의 표준 무료 Linux runner로 이동했습니다.
+공개 `AIProject-k/ApplicationTest`의 `.github/workflows/store-sync.yml`은 UTC 00:00·06:00·12:00·18:00(한국03:00·09:00·15:00·21:00, 6시간 간격), 해당 저장소 릴리스 게시, 수동 실행을 지원합니다. 즉시 반영하려면 관리자 상단 **동기화 실행** 링크에서 GitHub `Run workflow`를 누릅니다. 비공개 저장소는 결제/지출 제한으로 runner가 시작되지 않았으며, 지출 한도를 올리지 않고 공개 저장소의 표준 무료 Linux runner로 이동했습니다.
 
 공개 실행 저장소의 변수 `STORE_ORIGIN`은 운영 Worker origin입니다. 해당 저장소 secret `MINAPPSTORE_ADMIN_TOKEN`은 Worker `ADMIN_TOKEN`과 같습니다. 공개 GitHub 조회에는 job의 한시적 `GITHUB_TOKEN`을 사용하고 이를 Worker에 저장하지 않습니다. 키는 공개 코드에 들어가지 않습니다. R2/S3 자격증명은 필요 없습니다.
 

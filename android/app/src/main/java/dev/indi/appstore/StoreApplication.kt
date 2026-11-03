@@ -17,8 +17,8 @@ class StoreApplication : Application() {
         super.onCreate()
         getSystemService(NotificationManager::class.java).createNotificationChannel(
             NotificationChannel("updates", this.getString(R.string.updates_channel), NotificationManager.IMPORTANCE_DEFAULT))
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork("update-check", ExistingPeriodicWorkPolicy.KEEP,
-            PeriodicWorkRequestBuilder<UpdateWorker>(24, TimeUnit.HOURS)
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork("update-check", ExistingPeriodicWorkPolicy.UPDATE,
+            PeriodicWorkRequestBuilder<UpdateWorker>(6, TimeUnit.HOURS)
                 .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()).build())
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch { repository.recoverDownloads() }
     }
